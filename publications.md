@@ -53,7 +53,7 @@ permalink: /publications
 
 </div>
 
-<button class="before btn btn-group" style="margin-bottom:20px"> before 2015 </button>
+<button class="before btn btn-group" style="margin-bottom:20px"> More... </button>
 
 <div class="grid" >
 <div class="before-element" style="display: none;">
