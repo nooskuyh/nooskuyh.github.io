@@ -1,0 +1,29 @@
+---
+layout: default
+---
+<div class="container content page" style="padding-top: 3em">
+  <!-- <h1 class="page-title">{{ page.title }}</h1> -->
+  <h3>
+    <center>{{ page.title }}</center>
+  </h3>
+  <h4>
+    <center>
+      <span style="color: black">
+        {% assign authors = page.authors | split: ", " %} {{ authors | join: "
+        &nbsp; &nbsp; &nbsp; " }}
+      </span>
+    </center>
+  </h4>
+  <div style="margin-bottom: 80px"></div>
+  <div class="col-sm-12">
+    <div class="rpost-cont">
+      <div class="rpost-wrap">{{ content }}</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  img {
+    margin: 10px auto;
+  }
+</style>
