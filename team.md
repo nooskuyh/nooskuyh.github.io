@@ -81,8 +81,7 @@ layout: team
 
 </div>
 {% endif %}
-
-<br/>
+<hr />
 
 ### Students
 
@@ -161,10 +160,9 @@ layout: team
 
 </div>
 {% endif %}
+<hr />
 
-<br/>
-
-### Undergraduates
+<!-- ### Undergraduates
 
 <div style="margin-bottom: 20px;"></div>
 
@@ -197,48 +195,36 @@ layout: team
 
 </div>
 {% endif %}
+----->
 
-<br/>
 
-### Alumni
 
-<div style="margin-bottom: 20px;"></div>
+### Former Members
 
-<div class="row">
-{% for member in site.data.alumni_members %}
-<div class="col-sm-3 clearfix">
-  <h4>{{ member.name }}</h4>
-  <h5>{{ member.info }}</h5>
-  <div>{{ member.affiliation }}</div>
-</div>
-{% endfor %}
-</div>
-
-<br/>
-
-### Former visitors, BSc/ MSc students
 
 <div style="margin-bottom: 20px;"></div>
 
-<!--
-<div class="col-sm-4 clearfix">
+
+<!-- <div class="col-sm-4 clearfix">
 <h4>Visitors</h4>
 {% for member in site.data.alumni_visitors %}
 {{ member.name }}
 {% endfor %}
-</div>
+</div> -->
 
-<div class="col-sm-4 clearfix">
+<!-- <div class="col-sm-4 clearfix">
 <h4>Master students</h4>
 {% for member in site.data.alumni_msc %}
 {{ member.name }}
 {% endfor %}
-</div>
--->
+</div> -->
 
-  <h4>Bachelor Students</h4>
+  {%- for member in site.data.alumni_members -%}
+    <b>{{ member.name }}</b> {{ member.info }} - {{ member.affiliation }}<br>
+  {%- endfor -%}
+  <!-- <h4>Bachelor Students</h4> -->
   {%- for member in site.data.alumni_bsc -%}
-    <b>{{ member.name }}</b> , {{ member.info }} <br>
+    <b>{{ member.name }}</b> {{ member.info }} - {{ member.affiliation }}<br>
   {%- endfor -%}
 
 <br/>
