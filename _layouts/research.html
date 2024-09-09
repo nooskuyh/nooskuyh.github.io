@@ -1,29 +1,18 @@
 ---
 layout: default
 ---
-<div class="container content page" style="padding-top: 3em">
-  <!-- <h1 class="page-title">{{ page.title }}</h1> -->
-  <h3>
-    <center>{{ page.title }}</center>
-  </h3>
-  <h4>
-    <center>
-      <span style="color: black">
-        {% assign authors = page.authors | split: ", " %} {{ authors | join: "
-        &nbsp; &nbsp; &nbsp; " }}
-      </span>
-    </center>
-  </h4>
-  <div style="margin-bottom: 80px"></div>
-  <div class="col-sm-12">
-    <div class="rpost-cont">
-      <div class="rpost-wrap">{{ content }}</div>
-    </div>
+<link rel="stylesheet" href="{{ site.baseurl }}/research.css" />
+<div class="container research" id="header" style="padding-top: 3em; text-align: center; margin: auto;">
+  <div class="row" id="title-row" style="max-width: 100%; margin: 0 auto; display: inline-block">
+      <h2 class="col-md-12 text-center" id="title">
+          <b>{{page.bt}}</b> {{ page.st }}
+          <br>
+          <small>
+             {{page.comments}}
+          </small>
+      </h2>
+  </div>
+  <div class="rpost-cont">
+    <div class="rpost-wrap" style="text-align: left;">{{ content }}</div>
   </div>
 </div>
-
-<style>
-  img {
-    margin: 10px auto;
-  }
-</style>

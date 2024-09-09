@@ -1,6 +1,44 @@
 ---
 ---
 
+.material > li {
+  min-width:80px;
+  max-width: 100px;
+}
+.material > li > a{
+  font-weight: 300;
+}
+
+.material > li > a > img{
+  max-width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  height: 60px;
+}
+
+table {
+  background-color:transparent;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-size: 70%;
+  border-color: transparent;
+  border-collapse: collapse;
+}
+
+td,
+th {
+  padding: 0.25rem 0.5rem;
+  font-size: 140%;
+  border-color: transparent;
+}
+
+tbody tr:nth-child(odd) td,
+tbody tr:nth-child(odd) th {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -14,8 +52,7 @@ body {
 }
 
 html {
-  font-family: "Open Sans", "Source Sans Pro", "Helvetica Neue", Helvetica,
-    Arial, sans-serif;
+  font-family: "Source Sans Pro", Calibri, Candara, Arial, sans-serif;
   font-size: 18px;
   font-weight: 300;
   line-height: 1.6;
@@ -61,8 +98,8 @@ h5,
 h6 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  font-weight: 600;
-  font-family: "Open Sans", "Source Sans Pro";
+  font-weight: 300;
+  font-family:  "Source Sans Pro", Calibri, Candara, Arial, sans-serif;
   line-height: 1.1;
   color: #333;
   letter-spacing: -0.025rem;
@@ -83,7 +120,7 @@ h3 {
 h4,
 h5,
 h6 {
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 p {
@@ -272,29 +309,10 @@ img {
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 0 0 1rem;
+  margin: auto;
   // border-radius: 5px;
 }
 
-table {
-  margin-bottom: 1rem;
-  width: 100%;
-  font-size: 70%;
-  border: 1px solid #e5e5e5;
-  border-collapse: collapse;
-}
-
-td,
-th {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #e5e5e5;
-  font-size: 140%;
-}
-
-tbody tr:nth-child(odd) td,
-tbody tr:nth-child(odd) th {
-  background-color: #f9f9f9;
-}
 
 .lead {
   font-size: 1.25rem;
