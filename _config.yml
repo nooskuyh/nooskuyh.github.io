@@ -28,10 +28,11 @@ nav:
   #   href: "/news"
   - name: "publications"
     href: "/publications"
-  - name: "team"
-    href: "/team"
+  - name: "members"
+    href: "/members"
   - name: "research"
     href: "/research"
+
   #   - name:           "abstracts"
   #     href:           "/abstracts"
 
@@ -53,15 +54,18 @@ defaults:
       layout: "post"
   - scope:
       path: ""
-      type: "people"
+      type: "members"
     values:
       layout: "profile"
 
 collections:
-  people:
+  members:
     output: true
-    permalink: /people/:title/index.html
+    permalink: /members/:title/index.html
   research:
     output: true
+  researchtopics:
+    output: true
     permalink: /research/:title.html
-
+  home:
+    output: true

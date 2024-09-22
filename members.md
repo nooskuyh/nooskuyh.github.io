@@ -1,7 +1,7 @@
 ---
-title: "POSTECH SV Lab - Team"
-permalink: /team
-layout: team
+title: "POSTECH SV Lab - Members"
+permalink: /members
+layout: members
 ---
 
 ### Faculty
@@ -22,8 +22,9 @@ layout: team
   <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded" width="40%" style="float: left" />
   <h4 class="member-name" >{{ member.name }}</h4>
   <div class="member-info"> {{ member.info }} <br></div>
+  <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
   <div style="margin-bottom:7px;"></div>
-  <div class="member-link"><a href="mailto:{{ member.email }}">E-mail</a></div>
+  
   <div class="member-link"><a href="mailto:{{ member.email }}">Homepage</a></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">Linkedin</a></div>
   
@@ -101,8 +102,8 @@ layout: team
   <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded" width="40%" style="float: left" />
   <h4 class="member-name" >{{ member.name }}</h4>
   <div class="member-info"> {{ member.info }} <br></div>
+  <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
   <div style="margin-bottom:7px;"></div>
-  <div class="member-link"><a href="mailto:{{ member.email }}">E-mail</a></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">Homepage</a></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">Linkedin</a></div>
 
@@ -219,12 +220,13 @@ layout: team
 {% endfor %}
 </div> -->
 
+<ul>
   {%- for member in site.data.alumni_members -%}
-    <b>{{ member.name }}</b> {{ member.info }} - {{ member.affiliation }}<br>
+  <li>
+    <b>{{ member.name }}</b> ({{ member.info }}) : {{ member.affiliation }}<br>
+  </li>
   {%- endfor -%}
-  <!-- <h4>Bachelor Students</h4> -->
-  {%- for member in site.data.alumni_bsc -%}
-    <b>{{ member.name }}</b> {{ member.info }} - {{ member.affiliation }}<br>
-  {%- endfor -%}
+
+</ul>
 
 <br/>

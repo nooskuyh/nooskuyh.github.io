@@ -6,12 +6,10 @@ permalink: /publications
 ### Publications
 
 <div class="btn-group filter-button-group" role="group">
-
-    <button type="button" class="btn btn-primary" data-filter="*">All</button>
-    {%- for tag in site.data.pubtypes -%}
-    <button type="button" class="btn btn-primary" data-filter=".{{ tag.slug }}">{{ tag.name }}</button>
-    {%- endfor -%}
-
+	<button type="button" class="btn btn-primary" data-filter="*">All</button>
+	{%- for tag in site.data.pubtypes -%}
+	<button type="button" class="btn" data-filter=".{{ tag.slug }}">{{ tag.name }}</button>
+	{%- endfor -%}
 </div>
 
 <div style="height: 10px;"></div>
@@ -20,36 +18,36 @@ permalink: /publications
 <div class="pb">
 	{% assign grouped_items = site.data.publist | group_by: 'year' %}
 
-    {% for item in grouped_items %}
-    	{% if item.name > '2014' %}
-    		{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
-    		{% capture alltags %}
-    			{% for tag in site.data.pubtypes %}
-    				{{ tag.slug }}
-    			{% endfor %}
+	{% for item in grouped_items %}
+		{% if item.name > '2014' %}
+			{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
+			{% capture alltags %}
+				{% for tag in site.data.pubtypes %}
+					{{ tag.slug }}
+				{% endfor %}
 
-    		{% endcapture %}
+			{% endcapture %}
 
-    		{% assign matchingpubs = site.data.publist | where: "year", item.name %}
-    		{% capture matchingtags %}
-    			{% for pub in matchingpubs %}
-    				{{ pub.tag }}
-    			{% endfor %}
-    		{% endcapture %}
-    		{% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
+			{% assign matchingpubs = site.data.publist | where: "year", item.name %}
+			{% capture matchingtags %}
+				{% for pub in matchingpubs %}
+					{{ pub.tag }}
+				{% endfor %}
+			{% endcapture %}
+			{% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
 
-    		<h4 class="element-item {{ matchingtags }}">{{ item.name }}</h4>
-    		{% for publi in sorted_pubs %}
-    			<div class="element-item {{ publi.tag }}">
-    				<a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
-    				<em>{{ publi.authors }} </em><br />
+			<h4 class="element-item {{ matchingtags }}">{{ item.name }}</h4>
+			{% for publi in sorted_pubs %}
+				<div class="element-item {{ publi.tag }}">
+					<a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
+					<em>{{ publi.authors }} </em><br />
 
-    				{{ publi.venue }}, {{ publi.year }}
-    				<br><br>
-    			</div>
-    		{% endfor %}
-    	{% endif %}
-    {% endfor %}
+					{{ publi.venue }}, {{ publi.year }}
+					<br><br>
+				</div>
+			{% endfor %}
+		{% endif %}
+	{% endfor %}
 
 </div>
 
@@ -57,42 +55,46 @@ permalink: /publications
 
 <div class="pb" >
 <div class="before-element" style="display: none;">
-    {% for item in grouped_items %}
-    	{% if item.name <= '2014' %}
-    		{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
-    		{% capture alltags %}
-    			{% for tag in site.data.pubtypes %}
-    				{{ tag.slug }}
-    			{% endfor %}
+	{% for item in grouped_items %}
+		{% if item.name <= '2014' %}
+			{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
+			{% capture alltags %}
+				{% for tag in site.data.pubtypes %}
+					{{ tag.slug }}
+				{% endfor %}
 
-    		{% endcapture %}
+			{% endcapture %}
 
-    		{% assign matchingpubs = site.data.publist | where: "year", item.name %}
-    		{% capture matchingtags %}
-    			{% for pub in matchingpubs %}
-    				{{ pub.tag }}
-    			{% endfor %}
-    		{% endcapture %}
-    		{% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
+			{% assign matchingpubs = site.data.publist | where: "year", item.name %}
+			{% capture matchingtags %}
+				{% for pub in matchingpubs %}
+					{{ pub.tag }}
+				{% endfor %}
+			{% endcapture %}
+			{% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
 
-    		<h4 class="element-item {{ matchingtags }}">{{ item.name }}</h4>
-    		{% for publi in sorted_pubs %}
-    			<div class="element-item {{ publi.tag }}">
-    				<a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
-    				<em>{{ publi.authors }} </em><br />
+			<h4 class="element-item {{ matchingtags }}">{{ item.name }}</h4>
+			{% for publi in sorted_pubs %}
+				<div class="element-item {{ publi.tag }}">
+					<a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
+					<em>{{ publi.authors }} </em><br />
 
-    				{{ publi.venue }}, {{ publi.year }}
-    				<br><br>
-    			</div>
-    		{% endfor %}
-    	{% endif %}
-    {% endfor %}
+					{{ publi.venue }}, {{ publi.year }}
+					<br><br>
+				</div>
+			{% endfor %}
+		{% endif %}
+	{% endfor %}
 
 </div>
 
 <script src="http://code.jquery.com/jquery-3.1.0.min.js"></script>
 <script src="https://unpkg.com/isotope-layout@3.0/dist/isotope.pkgd.js"></script>
-<script>
+
+
+
+
+<!-- <script>
 	// init Isotope
 	function adjustFooter(x) {
 		console.log("hei");
@@ -100,13 +102,10 @@ permalink: /publications
 		var contentHeight = $('.pb').height(); // 현재 body의 전체 높이를 계산
 		var elementHeight = $('.before-element').height(); // 현재 body의 전체 높이를 계산
 		if(x === 0) {
-		console.log("aa");
-		console.log(contentHeight);
-
-
+			console.log("aa");
+			console.log(contentHeight);
 			footer.css('margin-top', elementHeight + 'px'); // footer의 top 값을 조정
-		}
-		else {
+		} else {
 			footer.css('margin-top', '0px'); // footer의 top 값을 조정
 		}
 	}
@@ -118,26 +117,26 @@ permalink: /publications
 	});
 	// filter items on button click
 	$('.filter-button-group').on('click', 'button', function () {
-		var filterValue = $(this).attr('data-filter');
+		$(this).toggleClass('btn-primary selected');
+		var filters = [];
+		$('.filter-button-group button.selected').each(function() {
+			filters.push($(this).attr('data-filter'));
+		});
+		var filterValue = filters.length ? filters.join(', ') : '*';
 		$grid.isotope({ filter: filterValue });
 		if(filterValue === '*'){
 			var targetDiv = $('.before-element');
 			targetDiv.css('display', 'none');
 			adjustFooter(1);
 		}
-	});
-	$('.btn-group button.btn').on('click', function () {
-		$('.btn-group button.btn').removeClass('focus');
-		$(this).addClass('focus');
+		console.log("hi");
 	});
 
-	
 	$(document).ready(function(){
 		$('.before').click(function(){
 			var targetDiv = $('.before-element');
 			
 			if (targetDiv.css('display') === 'none') {
-				
 				targetDiv.css('display', ''); 
 				adjustFooter(0);
 				var offset = targetDiv.offset().top;
@@ -152,6 +151,4 @@ permalink: /publications
 			}
 		});
 	});
-
-
-</script>
+</script> -->

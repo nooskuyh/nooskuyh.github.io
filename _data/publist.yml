@@ -9,7 +9,7 @@
     url: https://dl.acm.org/doi/abs/10.1145/3563822.3568016
     display:
   highlight: 0
-  tag: workshop
+  tag: conference
   
 - title: "심층 신경망의 효과적인 정형 검증을 위한 계층별 요약 기법"
   authors: 연주은, 채승현, 배경민
@@ -139,7 +139,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 - title: "FormaliSE@ICSE 2020: 8th International Conference on Formal Methods in Software Engineering, Seoul, Republic of Korea, July 13, 2020"
   authors: Kyungmin Bae, Domenico Bianculli, Stefania Gnesi, and Nico Plat
@@ -315,7 +315,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 # 2015
 
@@ -353,7 +353,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 - title: "Hybrid Multirate PALS"
   authors: Kyungmin Bae and Peter C. Olveczky
@@ -366,7 +366,7 @@
     url: https://link.springer.com/chapter/10.1007/978-3-319-23165-5_5
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 # 2014
 
@@ -416,7 +416,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 - title: "Rewriting-based model checking methods"
   authors: Kyungmin Bae
@@ -492,7 +492,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 - title: "Model Checking LTLR Formulas under Localized Fairness"
   authors: Kyungmin Bae and José Meseguer
@@ -504,7 +504,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 # 2011
 
@@ -544,7 +544,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 - title: "The Linear Temporal Logic of Rewriting Maude Model Checker"
   authors: Kyungmin Bae and José Meseguer
@@ -556,7 +556,7 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
 
 # 2009
 
@@ -584,4 +584,4 @@
     url: 
     display: 
   highlight: 0
-  tag: workshop
+  tag: conference
