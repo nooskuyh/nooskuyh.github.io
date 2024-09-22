@@ -6,11 +6,13 @@ permalink: /publications
 ### Publications
 
 <div class="btn-group filter-button-group" role="group">
-	<button type="button" class="btn btn-primary" data-filter="*">All</button>
+	<button type="button" class="btn" id="select-all" data-filter="*">All</button>
 	{%- for tag in site.data.pubtypes -%}
-	<button type="button" class="btn" data-filter=".{{ tag.slug }}">{{ tag.name }}</button>
+	<button type="button" class="btn {% if tag.slug == 'conference' %}btn-primary selected{% endif %}" id="select-{{tag.slug}}" data-filter=".{{ tag.slug }}">{{ tag.name }}</button>
 	{%- endfor -%}
+	<button type="button" class="btn btn-li" data-filter=".before">before 2016</button>
 </div>
+
 
 <div style="height: 10px;"></div>
 
@@ -19,7 +21,6 @@ permalink: /publications
 	{% assign grouped_items = site.data.publist | group_by: 'year' %}
 
 	{% for item in grouped_items %}
-		{% if item.name > '2014' %}
 			{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
 			{% capture alltags %}
 				{% for tag in site.data.pubtypes %}
@@ -46,44 +47,6 @@ permalink: /publications
 					<br><br>
 				</div>
 			{% endfor %}
-		{% endif %}
-	{% endfor %}
-
-</div>
-
-<button class="before btn btn-group" style="margin-bottom:20px"> More... </button>
-
-<div class="pb" >
-<div class="before-element" style="display: none;">
-	{% for item in grouped_items %}
-		{% if item.name <= '2014' %}
-			{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
-			{% capture alltags %}
-				{% for tag in site.data.pubtypes %}
-					{{ tag.slug }}
-				{% endfor %}
-
-			{% endcapture %}
-
-			{% assign matchingpubs = site.data.publist | where: "year", item.name %}
-			{% capture matchingtags %}
-				{% for pub in matchingpubs %}
-					{{ pub.tag }}
-				{% endfor %}
-			{% endcapture %}
-			{% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
-
-			<h4 class="element-item {{ matchingtags }}">{{ item.name }}</h4>
-			{% for publi in sorted_pubs %}
-				<div class="element-item {{ publi.tag }}">
-					<a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
-					<em>{{ publi.authors }} </em><br />
-
-					{{ publi.venue }}, {{ publi.year }}
-					<br><br>
-				</div>
-			{% endfor %}
-		{% endif %}
 	{% endfor %}
 
 </div>
@@ -92,31 +55,22 @@ permalink: /publications
 <script src="https://unpkg.com/isotope-layout@3.0/dist/isotope.pkgd.js"></script>
 
 
-
-
-<!-- <script>
+<script>
 	// init Isotope
-	function adjustFooter(x) {
-		console.log("hei");
-		var footer = $('.footer');
-		var contentHeight = $('.pb').height(); // 현재 body의 전체 높이를 계산
-		var elementHeight = $('.before-element').height(); // 현재 body의 전체 높이를 계산
-		if(x === 0) {
-			console.log("aa");
-			console.log(contentHeight);
-			footer.css('margin-top', elementHeight + 'px'); // footer의 top 값을 조정
-		} else {
-			footer.css('margin-top', '0px'); // footer의 top 값을 조정
-		}
-	}
-
 	var $grid = $('.pb').isotope({
-		// options
 		layoutMode: 'vertical',
-		transitionDuration: 1
+		transitionDuration: 1,
+		filter: '.conference'
 	});
 	// filter items on button click
 	$('.filter-button-group').on('click', 'button', function () {
+		if ($(this).attr('id') !== 'select-all') {
+			$('#select-all').removeClass('btn-primary selected');
+		}
+        if ($(this).attr('id') === 'select-all') {
+            // Remove 'btn-primary' and 'selected' classes from all buttons
+            $('.filter-button-group button').removeClass('btn-primary selected');
+		}
 		$(this).toggleClass('btn-primary selected');
 		var filters = [];
 		$('.filter-button-group button.selected').each(function() {
@@ -127,28 +81,39 @@ permalink: /publications
 		if(filterValue === '*'){
 			var targetDiv = $('.before-element');
 			targetDiv.css('display', 'none');
-			adjustFooter(1);
 		}
-		console.log("hi");
+
 	});
 
-	$(document).ready(function(){
-		$('.before').click(function(){
-			var targetDiv = $('.before-element');
-			
-			if (targetDiv.css('display') === 'none') {
-				targetDiv.css('display', ''); 
-				adjustFooter(0);
-				var offset = targetDiv.offset().top;
-
-				// Adjust the scroll position slightly above the div
-				$('html, body').animate({
-					scrollTop: offset - 160 
-				}, 500);
-			} else {
-				adjustFooter(1);
-				targetDiv.css('display', 'none');
-			}
+	$(document).ready(function() {
+		var $grid = $('.pb').isotope({
+			// options
+			itemSelector: '.element-item',
+			layoutMode: 'vertical',
+			transitionDuration: 1
+		});
+	
+		// filter items on button click
+		$('.filter-button-group').on('click', 'button', function () {
+			var $this = $(this);
+			var filterValue = $this.attr('data-filter');
+	
+			// Toggle 'selected' and 'btn-primary' classes on the clicked button
+			$this.toggleClass('selected btn-primary');
+	
+			// Collect all selected filters
+			var filters = [];
+			$('.filter-button-group button.selected').each(function() {
+				filters.push($(this).attr('data-filter'));
+			});
+	
+			// If no filters are selected, set filterValue to an empty string
+			filterValue = filters.length ? filters.join(', ') : '*';
+	
+			// Apply the filter
+			$grid.isotope({ filter: filterValue });
+	
+			console.log("Filter applied: " + filterValue);
 		});
 	});
-</script> -->
+</script>
