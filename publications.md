@@ -108,7 +108,16 @@ permalink: /publications
 			});
 	
 			// If no filters are selected, set filterValue to an empty string
-			filterValue = filters.length ? filters.join(', ') : '*';
+			if (filters.length) {
+				filterValue = filters.join(', ')
+				$('.filter-button-group button').toggleClass('selected btn-primary');
+			}
+			else {
+				filterValue = '*';
+
+
+			}
+
 	
 			// Apply the filter
 			$grid.isotope({ filter: filterValue });

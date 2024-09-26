@@ -1,7 +1,6 @@
 ---
 ---   
 
-<h3>Projects (Funding)</h3>
+## Projects (Funding) 
 
-Starlab 안녕하세용 스타랩입니다. 빤짝빤짝
 <img src="{{ site.baseurl }}/images/starlab.png" alt="" style="width : 100%">
