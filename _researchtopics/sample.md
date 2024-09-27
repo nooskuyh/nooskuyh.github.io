@@ -8,7 +8,7 @@ date: 2022-09-03
 ---
 
 ## Introduction
-<img src="sample.jpg" width="100%">
+<img src="/images/sample.jpg" width="100%">
 
 A concurrent system can be naturally specified as a rewrite theory (Σ,E,R). Under simple conditions, narrowing with rules R modulo the equations E can be used to both represent the system's state space by means of terms with logical variables and for model checking verification of LTL properties. Folding abstraction may approximate infinite logical reachable subsystem into a finite logical system. The Maude LTL logical model checker (LMC) tool can verify LTL properties over such logical states from a pattern of (possibly infinite) initial states using the (folded) logical state space.
 
