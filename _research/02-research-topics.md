@@ -7,11 +7,11 @@
 
 
 <div class="row" style="margin-left:0; margin-right:0">
-    <h4>{{ proj.title }}</h4> 
+    <a href="{{ proj.url }}"><h4>{{ proj.title }}</h4> </a>
     
 <div class="col-md-4">
-<img src="/images/respic/{{ proj.img-url }}" alt="" style="width : 100%">
-<button type="button" class="btn btn-outlin-primary" onclick="location.href='{{ proj.url }}'">Project Page</button>
+<a href="{{ proj.url }}">
+<img src="/images/respic/{{ proj.img-url }}" alt="" style="width : 100%"></a>
 </div>
 <div class="col-md-8">
     {{ proj.intro }}

@@ -6,123 +6,117 @@ permalink: /publications
 ### Publications
 
 <div class="btn-group filter-button-group" role="group">
-	<button type="button" class="btn" id="select-all" data-filter="*">All</button>
-	{%- for tag in site.data.pubtypes -%}
-	<button type="button" class="btn {% if tag.slug == 'conference' %}btn-primary selected{% endif %}" id="select-{{tag.slug}}" data-filter=".{{ tag.slug }}">{{ tag.name }}</button>
-	{%- endfor -%}
-	<button type="button" class="btn btn-li" data-filter=".before">before 2016</button>
+    <button type="button" class="btn" id="select-all">All</button>
+    <button type="button" class="btn btn-primary" id="select-conference">Conference</button>
+    <button type="button" class="btn btn-primary" id="select-journal">Journal</button>
+    <button type="button" class="btn" id="select-domestic">Domestic</button>
+    <button type="button" class="btn" id="select-book">Book</button>
+    <button type="button" class="btn" id="select-dissertation">Dissertation</button>
+    <button type="button" class="btn" id="select-before">Before 2016</button>
 </div>
-
 
 <div style="height: 10px;"></div>
 
 <!--Display Research Publications-->
 <div class="pb">
-	{% assign grouped_items = site.data.publist | group_by: 'year' %}
+    {% assign grouped_items = site.data.publist | group_by: 'year' %}
 
-	{% for item in grouped_items %}
-			{% assign sorted_pubs = item.items | sort: 'month' | reverse %}
-			{% capture alltags %}
-				{% for tag in site.data.pubtypes %}
-					{{ tag.slug }}
-				{% endfor %}
+    {% for item in grouped_items %}
+        {% assign sorted_pubs = item.items | sort: 'month' | reverse %}
+        {% capture alltags %}
+            {% for tag in site.data.pubtypes %}
+                {{ tag.slug }}
+            {% endfor %}
+        {% endcapture %}
 
-			{% endcapture %}
+        {% assign matchingpubs = site.data.publist | where: "year", item.name %}
+        {% capture matchingtags %}
+            {% for pub in matchingpubs %}
+                {{ pub.tag }}
+            {% endfor %}
+        {% endcapture %}
+        {% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
 
-			{% assign matchingpubs = site.data.publist | where: "year", item.name %}
-			{% capture matchingtags %}
-				{% for pub in matchingpubs %}
-					{{ pub.tag }}
-				{% endfor %}
-			{% endcapture %}
-			{% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
-
-			<h4 class="element-item {{ matchingtags }}">{{ item.name }}</h4>
-			{% for publi in sorted_pubs %}
-				<div class="element-item {{ publi.tag }}">
-					<a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
-					<em>{{ publi.authors }} </em><br />
-
-					{{ publi.venue }}, {{ publi.year }}
-					<br><br>
-				</div>
-			{% endfor %}
-	{% endfor %}
-
-</div>
-
-<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
-<script src="https://unpkg.com/isotope-layout@3.0/dist/isotope.pkgd.js"></script>
-
+        <h4 class="element-item {{ matchingtags }} {% if item.name < "2016" %}old{% endif %}">{{ item.name }}</h4>
+        {% for publi in sorted_pubs %}
+            <div class="element-item {{ publi.tag }} {% if publi.year < 2016 %}old{% endif %}">
+                <a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
+                <em>{{ publi.authors }} </em><br />
+                {{ publi.venue }}, {{ publi.year }}
+                <br><br>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div> 
 
 <script>
-	// init Isotope
-	var $grid = $('.pb').isotope({
-		layoutMode: 'vertical',
-		transitionDuration: 1,
-		filter: '.conference'
-	});
-	// filter items on button click
-	$('.filter-button-group').on('click', 'button', function () {
-		if ($(this).attr('id') !== 'select-all') {
-			$('#select-all').removeClass('btn-primary selected');
-		}
-        if ($(this).attr('id') === 'select-all') {
-            // Remove 'btn-primary' and 'selected' classes from all buttons
-            $('.filter-button-group button').removeClass('btn-primary selected');
-		}
-		$(this).toggleClass('btn-primary selected');
-		var filters = [];
-		$('.filter-button-group button.selected').each(function() {
-			filters.push($(this).attr('data-filter'));
-		});
-		var filterValue = filters.length ? filters.join(', ') : '*';
-		$grid.isotope({ filter: filterValue });
-		if(filterValue === '*'){
-			var targetDiv = $('.before-element');
-			targetDiv.css('display', 'none');
-		}
+document.addEventListener('DOMContentLoaded', function() {
+    const allElements = document.querySelectorAll('.element-item');
+    const oldElements = document.querySelectorAll('.element-item.old');
 
-	});
+    // Hide elements with 'old' class initially
+    oldElements.forEach(element => {
+        element.style.display = 'none';
+    });
 
-	$(document).ready(function() {
-		var $grid = $('.pb').isotope({
-			// options
-			itemSelector: '.element-item',
-			layoutMode: 'vertical',
-			transitionDuration: 1
-		});
-	
-		// filter items on button click
-		$('.filter-button-group').on('click', 'button', function () {
-			var $this = $(this);
-			var filterValue = $this.attr('data-filter');
-	
-			// Toggle 'selected' and 'btn-primary' classes on the clicked button
-			$this.toggleClass('selected btn-primary');
-	
-			// Collect all selected filters
-			var filters = [];
-			$('.filter-button-group button.selected').each(function() {
-				filters.push($(this).attr('data-filter'));
-			});
-	
-			// If no filters are selected, set filterValue to an empty string
-			if (filters.length) {
-				filterValue = filters.join(', ')
-				$('.filter-button-group button').toggleClass('selected btn-primary');
-			}
-			else {
-				filterValue = '*';
+    // Set default selected buttons
+    document.querySelector('#select-conference').classList.add('btn-primary');
+    document.querySelector('#select-journal').classList.add('btn-primary');
 
+    // Filter elements based on default selected buttons
+    filterElements();
 
-			}
+    document.querySelectorAll('.filter-button-group .btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.id.replace('select-', '');
+            const isAllButton = filter === 'all';
 
-	
-			// Apply the filter
-			$grid.isotope({ filter: filterValue });
-	
-			console.log("Filter applied: " + filterValue);
-		});
-	});
+            // Toggle 'btn-primary' class
+            if (this.classList.contains('btn-primary')) {
+                this.classList.remove('btn-primary');
+            } else {
+                if (isAllButton) {
+                    document.querySelectorAll('.filter-button-group .btn').forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                    });
+                } else {
+                    document.querySelector('#select-all').classList.remove('btn-primary');
+                }
+                this.classList.add('btn-primary');
+            }
+
+            // Filter elements
+            filterElements();
+        });
+    });
+
+    function filterElements() {
+        const activeFilters = Array.from(document.querySelectorAll('.filter-button-group .btn.btn-primary'))
+            .map(btn => btn.id.replace('select-', ''));
+        
+        const isBeforeSelected = activeFilters.includes('before');
+        const otherFilters = activeFilters.filter(filter => filter !== 'before');
+
+        if (activeFilters.includes('all')) {
+            allElements.forEach(element => {
+                element.style.display = 'block';
+            });
+        } else if (activeFilters.length === 0) {
+            allElements.forEach(element => {
+                element.style.display = 'none';
+            });
+        } else {
+            allElements.forEach(element => {
+                const elementClasses = Array.from(element.classList);
+                const isOld = elementClasses.includes('old');
+                const shouldShow = otherFilters.some(filter => elementClasses.includes(filter));
+                const showOld = isOld && isBeforeSelected && shouldShow;
+                element.style.display = (shouldShow && !isOld) || showOld ? 'block' : 'none';
+            });
+        }
+    }
+});
 </script>
+
+
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
