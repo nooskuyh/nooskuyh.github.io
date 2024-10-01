@@ -9,3 +9,4 @@ Our research is focused on advancing the field of software verification, which i
 *   **Model Checking:** We develop algorithms and tools for model checking, a technique that systematically explores the states of a software system to verify properties such as safety and liveness.
 *   **Formal Methods:** Our work includes the application of formal methods, which use mathematical models to specify and verify software behavior, ensuring correctness by design.
 *   **Static Analysis:** We create static analysis tools that analyze code without executing it, identifying potential errors and vulnerabilities early in the development process.
+
