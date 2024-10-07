@@ -12,8 +12,12 @@ permalink: /publications
     <button type="button" class="btn" id="select-domestic">Domestic</button>
     <button type="button" class="btn" id="select-book">Book</button>
     <button type="button" class="btn" id="select-dissertation">Dissertation</button>
+</div>
+<div class="btn-group filter-button-group" role="group">
+    <button type="button" class="btn btn-primary" id="select-after">Since 2016</button>
     <button type="button" class="btn" id="select-before">Before 2016</button>
 </div>
+    
 
 <div style="height: 10px;"></div>
 
@@ -37,9 +41,14 @@ permalink: /publications
         {% endcapture %}
         {% assign matchingtags = matchingtags | split: ' ' | uniq | join: ' ' %}
 
-        <h4 class="element-item {{ matchingtags }} {% if item.name < "2016" %}old{% endif %}">{{ item.name }}</h4>
+        <h4 class="element-item {{ matchingtags }} 
+        {% if item.name >= "2016" %}new{% endif %}
+        {% if item.name < "2016" %}old{% endif %}">{{ item.name }}</h4>
         {% for publi in sorted_pubs %}
-            <div class="element-item {{ publi.tag }} {% if publi.year < 2016 %}old{% endif %}">
+            <div class="element-item {{ publi.tag }} 
+            {% if publi.year >= 2016 %}new{% endif %}
+            {% if publi.year <  2016 %}old{% endif %}
+            ">
                 <a href="{{ publi.link.url }}">{{ publi.title }}</a><br />
                 <em>{{ publi.authors }} </em><br />
                 {{ publi.venue }}, {{ publi.year }}
@@ -53,9 +62,15 @@ permalink: /publications
 document.addEventListener('DOMContentLoaded', function() {
     const allElements = document.querySelectorAll('.element-item');
     const oldElements = document.querySelectorAll('.element-item.old');
+    const newElements = document.querySelectorAll('.element-item.new');
 
     // Hide elements with 'old' class initially
     oldElements.forEach(element => {
+        element.style.display = 'none';
+    });
+
+    // Hide elements with 'new' class initially
+    newElements.forEach(element => {
         element.style.display = 'none';
     });
 
@@ -95,7 +110,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .map(btn => btn.id.replace('select-', ''));
         
         const isBeforeSelected = activeFilters.includes('before');
-        const otherFilters = activeFilters.filter(filter => filter !== 'before');
+        const isAfterSelected = activeFilters.includes('after');
+        const otherFilters = activeFilters.filter(filter => filter !== 'before' && filter !== 'after');
 
         if (activeFilters.includes('all')) {
             allElements.forEach(element => {
@@ -109,9 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
             allElements.forEach(element => {
                 const elementClasses = Array.from(element.classList);
                 const isOld = elementClasses.includes('old');
+                const isNew = elementClasses.includes('new');
                 const shouldShow = otherFilters.some(filter => elementClasses.includes(filter));
                 const showOld = isOld && isBeforeSelected && shouldShow;
-                element.style.display = (shouldShow && !isOld) || showOld ? 'block' : 'none';
+                const showNew = isNew && isAfterSelected && shouldShow;
+                element.style.display = (shouldShow && !isOld && !isNew) || showOld || showNew ? 'block' : 'none';
             });
         }
     }
