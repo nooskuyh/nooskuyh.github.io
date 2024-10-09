@@ -25,8 +25,14 @@ layout: members
   <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
   <div style="margin-bottom:7px;"></div>
   
+<<<<<<< HEAD
   <div class="member-link"><a href="{{ member.page }}">Homepage</a></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">Linkedin</a></div>
+=======
+{% if member.page %}
+  <div class="member-link"><a href="{{ member.page }}">Homepage</a></div>
+{% endif %}
+>>>>>>> c68141782df89066d2a76e7cef79cf41d235edc2
   
   <ul style="overflow: hidden">
 
@@ -104,8 +110,12 @@ layout: members
   <div class="member-info"> {{ member.info }} <br></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
   <div style="margin-bottom:7px;"></div>
-  <div class="member-link"><a href="mailto:{{ member.email }}">Homepage</a></div>
-  <div class="member-link"><a href="mailto:{{ member.email }}">Linkedin</a></div>
+{% if member.page %}
+  <div class="member-link"><a href="{{ member.page }}">Homepage</a></div>
+{% endif %}
+{% if member.github %}
+  <div class="member-link"><a href="{{ member.page }}">Github</a></div>
+{% endif %}
 
   <ul style="overflow: hidden">
 
