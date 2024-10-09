@@ -46,7 +46,7 @@ The narrowing-based symbolic model checking method is introduced in:
 To be added.
 
 ## Contact
-Byoungho Son (byhoson at postech dot ac dot kr)
+Byoungho Son <a src="byhoson@postech.ac.kr">byhoson (at) postech.ac.kr</a>
 
 ---
 
