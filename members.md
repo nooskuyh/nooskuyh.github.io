@@ -25,7 +25,7 @@ layout: members
   <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
   <div style="margin-bottom:7px;"></div>
   
-  <div class="member-link"><a href="mailto:{{ member.email }}">Homepage</a></div>
+  <div class="member-link"><a href="{{ member.page }}">Homepage</a></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">Linkedin</a></div>
   
   <ul style="overflow: hidden">
