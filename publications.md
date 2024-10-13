@@ -14,8 +14,8 @@ permalink: /publications
     <button type="button" class="btn" id="select-dissertation">Dissertation</button>
 </div>
 <div class="btn-group filter-button-group" role="group">
-    <button type="button" class="btn btn-primary" id="select-after">Since 2016</button>
-    <button type="button" class="btn" id="select-before">Before 2016</button>
+    <button type="button" class="btn btn-primary btn-since" id="select-after">Since 2016</button>
+    <button type="button" class="btn btn-since" id="select-before">Before 2016</button>
 </div>
     
 

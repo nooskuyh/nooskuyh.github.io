@@ -88,7 +88,7 @@ h6 {
 
 p {
   font-family: "Open Sans", "Helvetica Neue", Helvetica;
-  font-weight: 300;
+  font-weight: 400;
   margin: 0 0 1rem;
   font-size: 0.8rem;
 }
@@ -97,7 +97,7 @@ ul,
 ol,
 dl {
   font-family: "Open Sans", "Helvetica Neue", Helvetica;
-  font-weight: 300;
+  font-weight: 400;
   font-size: 0.8rem;
   margin-top: 0;
   margin-bottom: 1rem;
@@ -698,16 +698,41 @@ tbody tr:nth-child(odd) th {
   margin-right: 0px;
 }
 
+.member-profile{
+  padding-right: 5%;
+  font-family: "Open Sans";
+  margin-bottom: 5%;
+}
+
+.member-profile > img{
+    width: 30%;
+    float: "left"; 
+}
+
+.student {
+  display:flex; 
+  flex-direction: column; 
+  width:30%;
+}
+
+.student > img{
+  width: 100%;
+}
+
 // fix menu bar spacing for mobile
 @media (max-width: 62em) {
-  .navbar-nav > li > a {
-    padding: 0.75em 0 0.5em 2.5em;
-    font-size: 15px;
+
+  .col {
+     width: 51%;
+  }
+  .member-profile > {
+    img {
+      width: 100%;
+    }
   }
 
-  // fix menu scroll along x axis
-  .navbar-nav {
-    margin-right: -15px;
+  .student {
+    width: 51%;
   }
 }
 
@@ -730,11 +755,78 @@ tbody tr:nth-child(odd) th {
 
 /* Darker background on mouse-over */
 
-.member-profile{
-  font-family: "Open Sans";
-}
+
 
 .member-link{
   font-family: "Open Sans";
 }
 
+
+
+.btn-since{
+  font-weight: 600;
+}
+
+span.icon-home {
+  background: url({{site.url}}/images/icons/home.png) no-repeat;
+  background-size: 100% 100%;
+  float: left;
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+}
+
+span.icon-git {
+  background: url({{site.url}}/images/icons/git.png) no-repeat;
+  background-size: 100% 100%;
+  float: left;
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+}
+
+span.icon-linkedin {
+  background: url({{site.url}}/images/icons/linkedin.png) no-repeat;
+  background-size: 100% 100%;
+  float: left;
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+}
+
+
+
+.student > .member-name > a > * {
+  margin-left: 5px;
+}
+
+.student > .member-name > a > {
+  
+    span.icon-home {
+      background: url({{site.url}}/images/icons/home.png) no-repeat;
+      background-size: 100% 100%;
+      float: right;
+      width: 20px;
+      height: 20px;
+      display: flex;
+    }
+  
+    span.icon-git {
+      background: url({{site.url}}/images/icons/git.png) no-repeat;
+      background-size: 100% 100%;
+      float: right;
+      width: 20px;
+      height: 20px;
+      display: flex;
+    }
+  
+    span.icon-linkedin {
+      background: url({{site.url}}/images/icons/linkedin.png) no-repeat;
+      background-size: 100% 100%;
+      float: right;
+      width: 20px;
+      height: 20px;
+      display: flex;
+    }
+} 
+  

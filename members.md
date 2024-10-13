@@ -3,10 +3,8 @@ title: "POSTECH SV Lab - Members"
 permalink: /members
 layout: members
 ---
-
 ### Faculty
-
-<div style="margin-bottom: 20px;"></div>
+<div style="margin-bottom: 20px;" class='container'>
 
 {% assign number_printed = 0 %}
 {% for member in site.data.faculty %}
@@ -15,25 +13,26 @@ layout: members
 
 {% if even_odd == 0 %}
 
-<div class="row">
+<div class="row" >
 {% endif %}
 
-<div class="col-sm-6 clearfix member-profile">
-  <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded" width="40%" style="float: left" />
-  <h4 class="member-name" >{{ member.name }}</h4>
+<div class="col clearfix member-profile">
+  <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded" width="50%" style="float: left" />
+  <h3 class="member-name" >{{ member.name }}</h3>
   <div class="member-info"> {{ member.info }} <br></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
   <div style="margin-bottom:7px;"></div>
   
-<<<<<<< HEAD
-  <div class="member-link"><a href="{{ member.page }}">Homepage</a></div>
-  <div class="member-link"><a href="mailto:{{ member.email }}">Linkedin</a></div>
-=======
 {% if member.page %}
-  <div class="member-link"><a href="{{ member.page }}">Homepage</a></div>
+  <a href="{{ member.page }}"><span class="icon-home"></span></a>
 {% endif %}
->>>>>>> c68141782df89066d2a76e7cef79cf41d235edc2
-  
+{% if member.git %}
+  <a href="{{ member.git }}"><span class="icon-git"></span></a>
+{% endif %}
+{% if member.linkedin %}
+  <a href="{{ member.linkedin }}"><span class="icon-linkedin"></span></a>
+{% endif %}
+
   <ul style="overflow: hidden">
 
 {% if member.number_educ == 1 %}
@@ -46,31 +45,6 @@ layout: members
   <li> {{ member.education1 }} </li>
   <li> {{ member.education2 }} </li>
   {% endif %}
-
-{% if member.number_educ == 3 %}
-
-  <li> {{ member.education1 }} </li>
-  <li> {{ member.education2 }} </li>
-  <li> {{ member.education3 }} </li>
-  {% endif %}
-
-{% if member.number_educ == 4 %}
-
-  <li> {{ member.education1 }} </li>
-  <li> {{ member.education2 }} </li>
-  <li> {{ member.education3 }} </li>
-  <li> {{ member.education4 }} </li>
-  {% endif %}
-
-{% if member.number_educ == 5 %}
-
-  <li> {{ member.education1 }} </li>
-  <li> {{ member.education2 }} </li>
-  <li> {{ member.education3 }} </li>
-  <li> {{ member.education4 }} </li>
-  <li> {{ member.education5 }} </li>
-  {% endif %}
-
   </ul>
 </div>
 
@@ -88,10 +62,59 @@ layout: members
 
 </div>
 {% endif %}
+</div>
 <hr />
 
 ### Students
 
+<div style="margin-bottom: 20px;" class='container'>
+<div class="row" style="flex-wrap: wrap; display: flex;">
+
+{% for member in site.data.students %}
+
+  <div class="col member-profile student" >
+    <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded"/>
+    <h4 class="member-name">{{ member.name }}    
+    {% if member.page %}
+      <a href="{{ member.page }}"><span class="icon-home"></span></a>
+    {% endif %}
+    {% if member.github %}
+      <a href="{{ member.github }}"><span class="icon-git"></span></a>
+    {% endif %}
+    {% if member.linkedin %}
+      <a href="{{ member.linkedin }}"><span class="icon-linkedin"></span></a>
+    {% endif %}</h4>
+
+
+    <div class="member-info">{{ member.info }} <br></div>
+    <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
+    <div style="margin-bottom:7px;"></div>
+
+  <ul style="overflow: hidden">
+
+  {% if member.number_educ == 1 %}
+
+  <li> {{ member.education1 }} </li>
+  {% endif %}
+
+  {% if member.number_educ == 2 %}
+
+  <li> {{ member.education1 }} </li>
+  <li> {{ member.education2 }} </li>
+  {% endif %}
+
+  </ul>
+  </div>
+
+
+{% endfor %}
+
+</div>
+</div>
+
+
+<!-- ! column style -->
+<!-- ### Students
 <div style="margin-bottom: 20px;"></div>
 
 {% assign number_printed = 0 %}
@@ -101,11 +124,11 @@ layout: members
 
 {% if even_odd == 0 %}
 
-<div class="row">
+<div class="row row-cols-3">
 {% endif %}
-
 <div class="col-sm-6 clearfix member-profile">
-  <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded" width="40%" style="float: left" />
+  <img src="/images/teampic/{{ member.photo }}" class="shadow p-3 mb-5 bg-white rounded" 
+  style="width:40%; aspect-ratio: 1 / 1; object-fit: cover; float: left" />
   <h4 class="member-name" >{{ member.name }}</h4>
   <div class="member-info"> {{ member.info }} <br></div>
   <div class="member-link"><a href="mailto:{{ member.email }}">{{member.email}}</a></div>
@@ -170,7 +193,9 @@ layout: members
 {% if even_odd == 1 %}
 
 </div>
-{% endif %}
+{% endif %} -->
+<!-- ! END column style -->
+
 <hr />
 
 <!-- ### Undergraduates
@@ -210,7 +235,7 @@ layout: members
 
 
 
-<!-- ### Former Members
+### Former Members
 
 
 <div style="margin-bottom: 20px;"></div>
@@ -233,10 +258,10 @@ layout: members
 <ul>
   {%- for member in site.data.alumni_members -%}
   <li>
-    <b>{{ member.name }}</b> ({{ member.info }}) : {{ member.affiliation }}<br>
+    <b>{{ member.name }}</b>({{ member.info }}): {{ member.affiliation }}<br>
   </li>
   {%- endfor -%}
 
 </ul>
 
-<br/> -->
+<br/> 

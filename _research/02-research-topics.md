@@ -1,7 +1,7 @@
 ---
 ---   
 
-<h3>Research Projects</h3>
+<h2>Research Projects</h2>
 
 {% for proj in site.researchtopics %}
 
@@ -11,7 +11,7 @@
     
 <div class="col-md-4">
 <a href="{{ proj.url }}">
-<img src="/images/respic/{{ proj.img-url }}" alt="" style="width : 100%"></a>
+<img src="/images/respic/{{ proj.img-url }}" alt="" style="height: 100%; margin: 0 0 0rem;"></a>
 </div>
 <div class="col-md-8">
     {{ proj.intro }}
