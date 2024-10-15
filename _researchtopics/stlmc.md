@@ -1,7 +1,7 @@
 ---
 layout: research
 title: "SMT-Based Model Checking for Signal Temporal Logic"
-intro: "This research focuses on modeling cyber-physical systems (CPS) that rely on virtual synchrony for coordination and timing accuracy. AADL (Architecture Analysis and Design Language) is used to represent the architecture and behavior of these systems. Formal analysis techniques are applied to ensure that timing constraints, communication, and synchronization requirements are met. The goal is to improve the reliability of CPS in critical applications such as aerospace or automotive systems, where precision and safety are paramount."
+intro: "This research focuses on modeling cyber-physical systems (CPS) that rely on virtual synchrony for coordination and timing accuracy. The goal is to improve the reliability of CPS in critical applications such as aerospace or automotive systems, where precision and safety are paramount."
 authors: Jia Lee, Geunyeol Yu, Kyungmin Bae
 img-url: "stlmc-arch.jpg"
 use_math: true

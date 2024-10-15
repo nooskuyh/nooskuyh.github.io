@@ -1,3 +1,86 @@
+# 2024
+
+- title: "Narrowing and Heuristic Search for Symbolic Reachability Analysis of Concurrent Object-Oriented Systems"
+  authors: Byeongjee Kang and Kyungmin Bae
+  venue: Science of Computer Programming
+  year: 2024
+  tag: journal
+  link:
+    url: https://dl.acm.org/doi/abs/10.1145/3563822.3568016
+    display:
+  highlight: 0
+
+
+- title: "Symbolic Analysis and Parameter Synthesis for Networks of Parametric Timed Automata with Global Variables Using Maude and SMT Solving"
+  authors: Jaime Arias, Kyungmin Bae, Carlos Olarte, Peter Csaba Olveczky, Laure Petrucci, and Fredrik Romming
+  venue: Science of Computer Programming
+  year: 2024
+  tag: journal
+
+- title: "Modeling and Formal Analysis of Virtually Synchronous Cyber-Physical Systems in AADL"
+  authors: Jaehun Lee, Kyungmin Bae, Peter Olveczky, Sharon Kim, and Minseok Kang
+  venue: Software Tools for Technology Transfer
+  year: 2022
+  tag: journal
+
+- title: "Formal Semantics and Analysis of Multitask PLC ST Programs with Preemption"
+  authors: Jaeseo Lee and Kyungmin Bae
+  venue: International Symposium on Formal Methods (FM)
+  year: 2024
+  tag: conference
+
+- title: "Formal Specification of Trusted Execution Environment APIs"
+  authors: Geunyeol Yu, Seunghyun Chae, Kyungmin Bae, and Sungkun Moon
+  venue: International Conference on Fundamental Approaches to Software Engineering (FASE)
+  year: 2024
+  tag: conference
+
+- title: "Symbolic Analysis and Parameter Synthesis for Time Petri Nets Using Maude and SMT Solving"
+  authors: Jaime Arias, Kyungmin Bae, Carlos Olarte, Peter Ölveczky, Laure Petrucci, and Fredrik Romming
+  venue: International Conference on Application and Theory of Petri Nets and Concurrency (Petri Nets)
+  year: 2023
+  tag: conference
+
+- title: "Formal Model Engineering of Distributed CPSs Using AADL: From Behavioral AADL Models to Multirate Hybrid Synchronous AADL"
+  authors: Kyungmin Bae and Peter Olveczky
+  venue: International Conference on Formal Aspects of Component Software (FACS)
+  year: 2023
+  tag: conference
+
+
+- title: "Formal Model Engineering of Synchronous CPS Designs in AADL"
+  authors: Kyungmin Bae and Peter Olveczky
+  venue: "2nd ADEPT Workshop: AADL by its Practitioners (ADEPT)"
+  year: 2023
+  tag: conference
+
+- title: "Rewriting Logic Semantics and Symbolic Analysis for Parametric Timed Automata"
+  authors: Jaime Arias, Kyungmin Bae, Carlos Olarte, Peter Ölveczky, Laure Petrucci, Fredrik Rømming
+  venue: ACM SIGPLAN International Workshop on Formal Techniques for Safety-Critical Systems (FTSCS)
+  year: 2022
+  tag: conference
+
+- title: "Symbolic Reachability Analysis of Distributed Systems Using Narrowing and Heuristic Search"
+  authors: Byeongjee Kang and Kyungmin Bae
+  venue: ACM SIGPLAN International Workshop on Formal Techniques for Safety-Critical Systems (FTSCS)
+  year: 2022
+  tag: conference
+
+- title: "Bounded Model Checking of PLC ST Programs Using Rewriting Modulo SMT"
+  authors: Jaeseo Lee, Sangki Kim, and Kyungmin Bae
+  venue: ACM SIGPLAN International Workshop on Formal Techniques for Safety-Critical Systems (FTSCS)
+  year: 2022
+  tag: conference
+
+- title: "Rewriting Logic and Its Applications - 14th International Workshop, WRLA@ETAPS 2022, Munich, Germany, April 2-3, 2022, Revised Selected Papers"
+  authors: Kyungmin Bae
+  venue: Lecture Notes in Computer Science 13252, Springer
+  year: 2022
+  tag: book
+
+
+
+
 # 2022
 
 - title: "Bounded Model Checking of PLC ST Programs using Rewriting Modulo SMT"

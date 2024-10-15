@@ -7,6 +7,10 @@ layout: page
 <div class="container">
   {% for content in site.research %}
     {{content}}
-    <br><br>
+  {% unless forloop.last %}
+    <hr>
+  {% endunless %}
+    <br>
   {% endfor %}
+  <br>
 </div>

@@ -23,7 +23,7 @@ permalink: /publications
 
 <!--Display Research Publications-->
 <div class="pb">
-    {% assign grouped_items = site.data.publist | group_by: 'year' %}
+    {% assign grouped_items = site.data.publist | sort: 'year' | reverse | group_by: 'year' %}
 
     {% for item in grouped_items %}
         {% assign sorted_pubs = item.items | sort: 'month' | reverse %}
@@ -92,10 +92,14 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 if (isAllButton) {
                     document.querySelectorAll('.filter-button-group .btn').forEach(btn => {
-                        btn.classList.remove('btn-primary');
+                     if (!btn.classList.contains('btn-since') && !btn.classList.contains('btn-since') ){
+                         btn.classList.remove('btn-primary');
+                     }
                     });
                 } else {
-                    document.querySelector('#select-all').classList.remove('btn-primary');
+                    if(!(filter === 'before' || filter === 'after')){
+                        document.querySelector('#select-all').classList.remove('btn-primary');
+                    }
                 }
                 this.classList.add('btn-primary');
             }
@@ -115,7 +119,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (activeFilters.includes('all')) {
             allElements.forEach(element => {
-                element.style.display = 'block';
+                const elementClasses = Array.from(element.classList);
+                const isOld = elementClasses.includes('old');
+                const isNew = elementClasses.includes('new');
+                element.style.display = (isOld && isBeforeSelected) || (isNew && isAfterSelected) ? 'block' : 'none';
             });
         } else if (activeFilters.length === 0) {
             allElements.forEach(element => {

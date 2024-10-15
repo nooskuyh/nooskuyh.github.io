@@ -8,7 +8,7 @@ date: 2024-10-06
 ---
 
 ## Introduction
-<img src="{{site.baseurl}}/images/respic/plc.jpg" width="100%">
+<img src="{{site.baseurl}}/images/respic/plc.jpg" width="70%">
 
 A programmable logic controller (PLC) is commonly used in industrial control systems, and Structured Text (ST) serves as an imperative programming language for developing PLC software. Given the safety-critical nature of PLC applications, it is essential to formally verify PLC programs. A rewriting-based formal semantics for ST has been introduced for this purpose. In this project, we propose a bounded model checking technique for PLC ST programs, leveraging the rewriting-based semantics. We employ rewriting modulo SMT to symbolically examine LTL properties of ST programs concerning sequences of inputs and outputs, which may be infinite. The effectiveness of our approach has been demonstrated through a case study involving traffic lights.
 

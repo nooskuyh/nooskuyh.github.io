@@ -832,3 +832,11 @@ span.icon-linkedin {
     }
 } 
   
+hr.dot{
+  border: none;
+  border-top: 2px dotted rgba(192, 192, 192, 0.596);
+  color: #fff;
+  background-color: #fff;
+  height: 1px;
+  width: 50%;
+}

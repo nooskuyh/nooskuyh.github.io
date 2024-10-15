@@ -1,7 +1,7 @@
 ---
 layout: researchpage
 title: "Reusable Model Checking"
-intro: "Model checking usually takes very long time until a result is obtained. Even worse, model checking typically is quite a repetitive process, much like software development. It is this heavy repetition of similar search instances each of which is also very heavy, that makes model checking impractical. However, only little effort has been made to avoid such redundancies from the repetition. Hence our main goal is to devise a learning based technique that exploits frequent logical patterns within a group of similar model checking instances to accelerate the search." 
+intro: "Model checking usually takes very long time until a result is obtained. Even worse, model checking typically is quite a repetitive process, much like software development. Our main goal is to devise a learning based technique that exploits frequent logical patterns within a group of similar model checking instances to accelerate the search." 
 intro-temp: "This research aims at accelerating model checking by learning useful patterns from previous search instances"
 img-url: "reusable.png"
 date: 2024-10-01

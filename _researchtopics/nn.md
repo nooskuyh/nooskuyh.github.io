@@ -1,7 +1,7 @@
 ---
 layout: research
 title: "Layered Abstraction Technique for Effective Formal Verification of Deep Neural Networks"
-intro: "This research focuses on modeling cyber-physical systems (CPS) that rely on virtual synchrony for coordination and timing accuracy. AADL (Architecture Analysis and Design Language) is used to represent the architecture and behavior of these systems. Formal analysis techniques are applied to ensure that timing constraints, communication, and synchronization requirements are met. The goal is to improve the reliability of CPS in critical applications such as aerospace or automotive systems, where precision and safety are paramount." 
+intro: "In this research, we propose a new technique, called layered abstraction, for non-linear activation functions, such as ReLU and Tanh, and the verification algorithm based on that. We have implemented our method by extending the existing SMT-based methods."
 authors: Jueun Yeon, Seunghyun Chae, Kyungmin Bae
 img-url: "nn-panda.png"
 date: 2022-12-23
