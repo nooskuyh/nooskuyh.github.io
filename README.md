@@ -1,5 +1,5 @@
 # Hyuksoon Jang
 Software Engineer  
 email: smashh712 (at) gmail.com  
-discord: nooskuyh
+discord: nooskuyh  
 Species: Human
