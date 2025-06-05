@@ -9,3 +9,5 @@ Discord: nooskuyh
 
 <!-- downloadable CV -->
 [Download CV (PDF, 2 MB)](Hyuksoon_Jang.pdf)
+
+<meta name="google-site-verification" content="zvposCLll85KgRs0u8xGTI5ZY_NDqofTCb0J9QTOyVU" />
