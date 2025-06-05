@@ -1,5 +1,7 @@
 # Hyuksoon Jang
+
 Software Engineer  
-Email: smashh712 (at) gmail.com  
+Email: hyuksoon (at) postech.ac.kr  
 Discord: nooskuyh  
-Species: Human
+Reserach Interest: Formal Methods, Programming Language, HCI, Numerical Analysis 
+CV: 
