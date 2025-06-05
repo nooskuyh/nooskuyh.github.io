@@ -1,8 +1,5 @@
 # Hyuksoon Jang
-
-<p align="center">
-  <img src="hs.jpg" alt="Hyuksoon Jang" width="220">
-</p>
+<img src="hs.jpg" alt="Hyuksoon Jang" width="220">
 
 Software Engineer  
 Email: hyuksoon (at) postech.ac.kr  
