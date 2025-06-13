@@ -36,7 +36,7 @@ setInterval(function() {
     toX = ( toX * 9.0 + mX )/10.0
     toY = ( toY * 9.0 + mY )/10.0
 
-    console.log(toX,toY, mX)
+    //console.log(toX,toY, mX)
     
     var dist = calculateDistance(card, mX, mY)
 
