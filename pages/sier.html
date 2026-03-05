@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Colorful Sierpinski Gasket</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        canvas { background-color: #000; border: 2px solid #444; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .controls { margin-bottom: 20px; background: #333; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; width: 512px; }
+        .row { display: flex; justify-content: space-between; align-items: center; }
+        input[type="range"] { width: 70%; }
+        .stats { font-size: 0.85em; color: #aaa; border-top: 1px solid #444; pt: 10px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Sierpinski</h2>
+    <div class="controls">
+        <div class="row">
+            <label>Iteration (n): <span id="depthLabel">0</span></label>
+            <input type="range" id="depthRange" min="0" max="10" value="0">
+        </div>
+        <div class="stats">
+            Current Rectangles: <span id="countLabel">1</span> | 
+            Algorithm: $3^n$ growth
+        </div>
+    </div>
+    <canvas id="sierpCanvas" width="640" height="640"></canvas>
+
+    <script>
+        const canvas = document.getElementById('sierpinskiCanvas');
+        const ctx = document.getElementById('sierpCanvas').getContext('2d');
+        const depthRange = document.getElementById('depthRange');
+        const depthLabel = document.getElementById('depthLabel');
+        const countLabel = document.getElementById('countLabel');
+
+        const BASE_SIZE = 512;
+        const OFFSET = 64;
+
+        /**
+         * @param {number} x, y
+         * @param {number} size
+         * @param {number} n
+         * @param {number} hue
+         */
+        function drawSierpinski(x, y, size, n, hue) {
+            if (n === 0) {
+                ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+                ctx.fillRect(x, y, size, size);
+                return;
+            }
+
+            const newSize = size / 2;
+            
+            drawSierpinski(x, y, newSize, n - 1, hue);
+
+            drawSierpinski(x + newSize, y, newSize, n - 1, (hue + 40) % 360);
+
+            drawSierpinski(x + newSize / 2, y + newSize, newSize, n - 1, (hue + 80) % 360);
+        }
+
+        function render() {
+            const n = parseInt(depthRange.value);
+            depthLabel.innerText = n;
+            countLabel.innerText = Math.pow(3, n).toLocaleString();
+
+            ctx.clearRect(0, 0, 640, 640);
+            drawSierpinski(OFFSET, OFFSET, BASE_SIZE, n, 200);
+        }
+
+        depthRange.addEventListener('input', render);
+        render();
+    </script>
+</body>
+</html>
