@@ -621,54 +621,6 @@
           return inside;
         }
 
-        function verticalBoundaryHit(points, origin, skipEdgeA, skipEdgeB) {
-          const x = origin.x;
-          const eps = 0.35;
-          let best = null;
-          let bestY = Infinity;
-
-          for (let i = 0; i < points.length; i += 1) {
-            const next = (i + 1) % points.length;
-            if (i === skipEdgeA || i === skipEdgeB) {
-              continue;
-            }
-
-            const a = points[i];
-            const b = points[next];
-            const minX = Math.min(a.x, b.x);
-            const maxX = Math.max(a.x, b.x);
-
-            if (x < minX - eps || x > maxX + eps) {
-              continue;
-            }
-
-            let hitY = null;
-            const dx = b.x - a.x;
-            if (Math.abs(dx) < eps) {
-              if (Math.abs(x - a.x) > eps) {
-                continue;
-              }
-              const below = [a.y, b.y].filter((value) => value > origin.y + eps);
-              if (below.length) {
-                hitY = Math.min(...below);
-              }
-            } else {
-              const t = (x - a.x) / dx;
-              if (t < -0.001 || t > 1.001) {
-                continue;
-              }
-              hitY = a.y + t * (b.y - a.y);
-            }
-
-            if (hitY !== null && hitY > origin.y + eps && hitY < bestY) {
-              bestY = hitY;
-              best = pt(x, hitY);
-            }
-          }
-
-          return best;
-        }
-
         function buildShadeBands(points, depth) {
           const bands = [];
           for (let i = 0; i < points.length; i += 1) {
@@ -683,17 +635,6 @@
           return bands;
         }
 
-        function buildHoleLines(points, holeStarts, minLineDepth) {
-          const lines = [];
-          for (const startInfo of holeStarts) {
-            const hit = verticalBoundaryHit(points, startInfo.point, startInfo.skipEdgeA, startInfo.skipEdgeB);
-            if (hit && hit.y - startInfo.point.y >= minLineDepth) {
-              lines.push({ from: startInfo.point, to: hit });
-            }
-          }
-          return lines;
-        }
-
         self.onmessage = (event) => {
           const { jobId, chunk, state } = event.data;
           const items = [];
@@ -705,17 +646,10 @@
               points,
               holeStarts: [],
               shadeBands: [],
-              holeLines: [],
             };
 
             if (state.dropEnabled) {
-              item.holeStarts = tile.holeStarts.map((start) => ({
-                point: worldToScreen(start.point, state),
-                skipEdgeA: start.skipEdgeA,
-                skipEdgeB: start.skipEdgeB,
-              }));
               item.shadeBands = buildShadeBands(points, state.bandDepth);
-              item.holeLines = buildHoleLines(points, item.holeStarts, state.holeMinLineDepth);
             }
 
             items.push(item);
@@ -750,7 +684,6 @@
         doSpin: hasSpinTransform(),
         dropEnabled,
         bandDepth: Math.max(7, Math.min(20, scale * 0.28)),
-        holeMinLineDepth,
       };
     }
 
@@ -759,7 +692,6 @@
       return {
         key: tile.motionKey,
         outline: geometry.outline,
-        holeStarts: dropEnabled ? geometry.holeStarts : [],
       };
     }
 
@@ -1294,10 +1226,6 @@
           a: pt(band.a.x + offsetX, band.a.y + offsetY),
           b: pt(band.b.x + offsetX, band.b.y + offsetY),
         })) || [],
-        holeLines: item.holeLines?.map((line) => ({
-          from: pt(line.from.x + offsetX, line.from.y + offsetY),
-          to: pt(line.to.x + offsetX, line.to.y + offsetY),
-        })) || [],
         opacity: 0.18 + eased * 0.82,
       };
     }
@@ -1558,7 +1486,6 @@
             points,
             holeStarts,
             shadeBands: [],
-            holeLines: [],
           };
         });
 
@@ -1576,7 +1503,6 @@
             skipEdgeB: start.skipEdgeB,
           })) : [],
           shadeBands: [],
-          holeLines: [],
         };
       });
 
@@ -1597,7 +1523,6 @@
                 points: item.points,
                 holeStarts: item.holeStarts,
                 shadeBands: item.shadeBands,
-                holeLines: item.holeLines,
               }))
               .filter((item) => item.tile);
             return animatePreparedTiles(prepared, time);
@@ -1832,7 +1757,7 @@
     }
 
     function drawTile(item) {
-      const { tile, points, holeStarts, shadeBands, holeLines } = item;
+      const { tile, points, shadeBands } = item;
       const fill = tile.fill || hexToColor(currentTheme.palette[0]);
 
       ctx.save();
@@ -1844,7 +1769,6 @@
 
       if (dropEnabled) {
         drawHoleShade(points, fill, shadeBands);
-        drawHoleLines(points, holeStarts, fill, holeLines);
       }
 
       beginPolygon(points);
@@ -1864,10 +1788,11 @@
           spinAngle += delta * 0.00145;
         }
 
+        const tiles = await prepareVisibleTiles(time);
+
         ctx.clearRect(0, 0, width, height);
         drawBackground(time);
 
-        const tiles = await prepareVisibleTiles(time);
         for (const item of tiles) {
           drawTile(item);
         }
