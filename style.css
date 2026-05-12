@@ -61,6 +61,22 @@ h1 {
   background-color: #005fa3;
 }
 
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.links a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 600px) {
   .profile-img {
     float: none;

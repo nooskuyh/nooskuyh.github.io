@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aperiodic Monotile Field</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f1eee5;
+      --ink: #1d2521;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      background:
+        linear-gradient(130deg, rgba(255, 255, 255, 0.72), transparent 48%),
+        linear-gradient(315deg, rgba(35, 42, 38, 0.1), transparent 55%),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #stage {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+    }
+
+    #stage.dragging {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .hud button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(29, 37, 33, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--ink);
+      box-shadow: 0 12px 28px rgba(29, 37, 33, 0.12);
+      cursor: pointer;
+      pointer-events: auto;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    .hud button:hover {
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .hud svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stage" aria-label="Aperiodic monotile canvas"></canvas>
+
+  <div class="hud">
+    <button id="reset" type="button" aria-label="Reset view">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+        <path d="M3 4v6h6"></path>
+      </svg>
+    </button>
+  </div>
+
+  <script>
+    /*
+      Metatile geometry adapted from Craig S. Kaplan's hatviz project.
+      This file keeps the H/T/P/F substitution construction and replaces
+      the UI/rendering layer with a standalone canvas view.
+
+      BSD 3-Clause License
+
+      Copyright (c) 2023, Craig S. Kaplan
+
+      Redistribution and use in source and binary forms, with or without
+      modification, are permitted provided that the following conditions are met:
+
+      1. Redistributions of source code must retain the above copyright notice,
+         this list of conditions and the following disclaimer.
+
+      2. Redistributions in binary form must reproduce the above copyright
+         notice, this list of conditions and the following disclaimer in the
+         documentation and/or other materials provided with the distribution.
+
+      3. Neither the name of the copyright holder nor the names of its
+         contributors may be used to endorse or promote products derived from
+         this software without specific prior written permission.
+
+      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+      AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+      IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+      ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+      LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+      CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+      SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+      INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+      CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+      ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+      POSSIBILITY OF SUCH DAMAGE.
+    */
+
+    const canvas = document.querySelector("#stage");
+    const ctx = canvas.getContext("2d");
+    const resetButton = document.querySelector("#reset");
+
+    const sqrt3 = Math.sqrt(3);
+    const halfSqrt3 = sqrt3 / 2;
+    const pi = Math.PI;
+    const ident = [1, 0, 0, 0, 1, 0];
+    const sharedTileColor = { r: 142, g: 165, b: 156, css: "rgb(142, 165, 156)" };
+
+    let dpr = 1;
+    let width = 0;
+    let height = 0;
+    let scale = 21;
+    let panX = 0;
+    let panY = 0;
+    let startX = 0;
+    let startY = 0;
+    let startPanX = 0;
+    let startPanY = 0;
+    let activePointerId = null;
+    let renderQueued = false;
+    let leaves = [];
+    let bounds = null;
+    let spatialIndex = new Map();
+    let gridCellSize = 12;
+
+    function pt(x, y) {
+      return { x, y };
+    }
+
+    function hexPt(x, y) {
+      return pt(x + 0.5 * y, halfSqrt3 * y);
+    }
+
+    function padd(p, q) {
+      return pt(p.x + q.x, p.y + q.y);
+    }
+
+    function psub(p, q) {
+      return pt(p.x - q.x, p.y - q.y);
+    }
+
+    function inv(T) {
+      const det = T[0] * T[4] - T[1] * T[3];
+      return [
+        T[4] / det,
+        -T[1] / det,
+        (T[1] * T[5] - T[2] * T[4]) / det,
+        -T[3] / det,
+        T[0] / det,
+        (T[2] * T[3] - T[0] * T[5]) / det,
+      ];
+    }
+
+    function mul(A, B) {
+      return [
+        A[0] * B[0] + A[1] * B[3],
+        A[0] * B[1] + A[1] * B[4],
+        A[0] * B[2] + A[1] * B[5] + A[2],
+        A[3] * B[0] + A[4] * B[3],
+        A[3] * B[1] + A[4] * B[4],
+        A[3] * B[2] + A[4] * B[5] + A[5],
+      ];
+    }
+
+    function trot(angle) {
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      return [c, -s, 0, s, c, 0];
+    }
+
+    function ttrans(tx, ty) {
+      return [1, 0, tx, 0, 1, ty];
+    }
+
+    function rotAbout(p, angle) {
+      return mul(ttrans(p.x, p.y), mul(trot(angle), ttrans(-p.x, -p.y)));
+    }
+
+    function transPt(M, P) {
+      return pt(M[0] * P.x + M[1] * P.y + M[2], M[3] * P.x + M[4] * P.y + M[5]);
+    }
+
+    function matchSeg(p, q) {
+      return [q.x - p.x, p.y - q.y, p.x, q.y - p.y, q.x - p.x, p.y];
+    }
+
+    function matchTwo(p1, q1, p2, q2) {
+      return mul(matchSeg(p2, q2), inv(matchSeg(p1, q1)));
+    }
+
+    function intersect(p1, q1, p2, q2) {
+      const d = (q2.y - p2.y) * (q1.x - p1.x) - (q2.x - p2.x) * (q1.y - p1.y);
+      const uA = ((q2.x - p2.x) * (p1.y - p2.y) - (q2.y - p2.y) * (p1.x - p2.x)) / d;
+      return pt(p1.x + uA * (q1.x - p1.x), p1.y + uA * (q1.y - p1.y));
+    }
+
+    const hatOutline = [
+      hexPt(0, 0),
+      hexPt(-1, -1),
+      hexPt(0, -2),
+      hexPt(2, -2),
+      hexPt(2, -1),
+      hexPt(4, -2),
+      hexPt(5, -1),
+      hexPt(4, 0),
+      hexPt(3, 0),
+      hexPt(2, 2),
+      hexPt(0, 3),
+      hexPt(0, 2),
+      hexPt(-1, 2),
+    ];
+
+    class HatTile {
+      collect(T, out) {
+        out.push({ T, color: sharedTileColor });
+      }
+    }
+
+    class MetaTile {
+      constructor(shape, width) {
+        this.shape = shape;
+        this.width = width;
+        this.children = [];
+      }
+
+      addChild(T, geom) {
+        this.children.push({ T, geom });
+      }
+
+      evalChild(n, i) {
+        return transPt(this.children[n].T, this.children[n].geom.shape[i]);
+      }
+
+      recenter() {
+        let cx = 0;
+        let cy = 0;
+        for (const p of this.shape) {
+          cx += p.x;
+          cy += p.y;
+        }
+        cx /= this.shape.length;
+        cy /= this.shape.length;
+
+        const tr = pt(-cx, -cy);
+        for (let i = 0; i < this.shape.length; i += 1) {
+          this.shape[i] = padd(this.shape[i], tr);
+        }
+
+        const M = ttrans(-cx, -cy);
+        for (const child of this.children) {
+          child.T = mul(M, child.T);
+        }
+      }
+
+      collect(T, out) {
+        for (const child of this.children) {
+          child.geom.collect(mul(T, child.T), out);
+        }
+      }
+    }
+
+    function mixColor(a, b, t) {
+      return {
+        r: Math.round(a.r + (b.r - a.r) * t),
+        g: Math.round(a.g + (b.g - a.g) * t),
+        b: Math.round(a.b + (b.b - a.b) * t),
+      };
+    }
+
+    function colorString(color, alpha) {
+      return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+    }
+
+    function createInitialTiles() {
+      const hat = new HatTile();
+
+      const H = (() => {
+        const outline = [
+          pt(0, 0),
+          pt(4, 0),
+          pt(4.5, halfSqrt3),
+          pt(2.5, 5 * halfSqrt3),
+          pt(1.5, 5 * halfSqrt3),
+          pt(-0.5, halfSqrt3),
+        ];
+        const meta = new MetaTile(outline, 2);
+        meta.addChild(matchTwo(hatOutline[5], hatOutline[7], outline[5], outline[0]), hat);
+        meta.addChild(matchTwo(hatOutline[9], hatOutline[11], outline[1], outline[2]), hat);
+        meta.addChild(matchTwo(hatOutline[5], hatOutline[7], outline[3], outline[4]), hat);
+        meta.addChild(mul(ttrans(2.5, halfSqrt3), mul([-0.5, -halfSqrt3, 0, halfSqrt3, -0.5, 0], [0.5, 0, 0, 0, -0.5, 0])), hat);
+        return meta;
+      })();
+
+      const T = (() => {
+        const outline = [pt(0, 0), pt(3, 0), pt(1.5, 3 * halfSqrt3)];
+        const meta = new MetaTile(outline, 2);
+        meta.addChild([0.5, 0, 0.5, 0, 0.5, halfSqrt3], hat);
+        return meta;
+      })();
+
+      const P = (() => {
+        const outline = [pt(0, 0), pt(4, 0), pt(3, 2 * halfSqrt3), pt(-1, 2 * halfSqrt3)];
+        const meta = new MetaTile(outline, 2);
+        meta.addChild([0.5, 0, 1.5, 0, 0.5, halfSqrt3], hat);
+        meta.addChild(mul(ttrans(0, 2 * halfSqrt3), mul([0.5, halfSqrt3, 0, -halfSqrt3, 0.5, 0], [0.5, 0, 0, 0, 0.5, 0])), hat);
+        return meta;
+      })();
+
+      const F = (() => {
+        const outline = [pt(0, 0), pt(3, 0), pt(3.5, halfSqrt3), pt(3, 2 * halfSqrt3), pt(-1, 2 * halfSqrt3)];
+        const meta = new MetaTile(outline, 2);
+        meta.addChild([0.5, 0, 1.5, 0, 0.5, halfSqrt3], hat);
+        meta.addChild(mul(ttrans(0, 2 * halfSqrt3), mul([0.5, halfSqrt3, 0, -halfSqrt3, 0.5, 0], [0.5, 0, 0, 0, 0.5, 0])), hat);
+        return meta;
+      })();
+
+      return [H, T, P, F];
+    }
+
+    function constructPatch(H, T, P, F) {
+      const rules = [
+        ["H"],
+        [0, 0, "P", 2],
+        [1, 0, "H", 2],
+        [2, 0, "P", 2],
+        [3, 0, "H", 2],
+        [4, 4, "P", 2],
+        [0, 4, "F", 3],
+        [2, 4, "F", 3],
+        [4, 1, 3, 2, "F", 0],
+        [8, 3, "H", 0],
+        [9, 2, "P", 0],
+        [10, 2, "H", 0],
+        [11, 4, "P", 2],
+        [12, 0, "H", 2],
+        [13, 0, "F", 3],
+        [14, 2, "F", 1],
+        [15, 3, "H", 4],
+        [8, 2, "F", 1],
+        [17, 3, "H", 0],
+        [18, 2, "P", 0],
+        [19, 2, "H", 2],
+        [20, 4, "F", 3],
+        [20, 0, "P", 2],
+        [22, 0, "H", 2],
+        [23, 4, "F", 3],
+        [23, 0, "F", 3],
+        [16, 0, "P", 2],
+        [9, 4, 0, 2, "T", 2],
+        [4, 0, "F", 3],
+      ];
+      const ret = new MetaTile([], H.width);
+      const shapes = { H, T, P, F };
+
+      for (const rule of rules) {
+        if (rule.length === 1) {
+          ret.addChild(ident, shapes[rule[0]]);
+        } else if (rule.length === 4) {
+          const poly = ret.children[rule[0]].geom.shape;
+          const T0 = ret.children[rule[0]].T;
+          const P0 = transPt(T0, poly[(rule[1] + 1) % poly.length]);
+          const Q0 = transPt(T0, poly[rule[1]]);
+          const nextShape = shapes[rule[2]];
+          const nextPoly = nextShape.shape;
+          ret.addChild(matchTwo(nextPoly[rule[3]], nextPoly[(rule[3] + 1) % nextPoly.length], P0, Q0), nextShape);
+        } else {
+          const childP = ret.children[rule[0]];
+          const childQ = ret.children[rule[2]];
+          const P0 = transPt(childQ.T, childQ.geom.shape[rule[3]]);
+          const Q0 = transPt(childP.T, childP.geom.shape[rule[1]]);
+          const nextShape = shapes[rule[4]];
+          const nextPoly = nextShape.shape;
+          ret.addChild(matchTwo(nextPoly[rule[5]], nextPoly[(rule[5] + 1) % nextPoly.length], P0, Q0), nextShape);
+        }
+      }
+
+      return ret;
+    }
+
+    function constructMetatiles(patch) {
+      const bps1 = patch.evalChild(8, 2);
+      const bps2 = patch.evalChild(21, 2);
+      const rbps = transPt(rotAbout(bps1, -2 * pi / 3), bps2);
+      const p72 = patch.evalChild(7, 2);
+      const p252 = patch.evalChild(25, 2);
+      const llc = intersect(bps1, rbps, patch.evalChild(6, 2), p72);
+      let w = psub(patch.evalChild(6, 2), llc);
+
+      const newHOutline = [llc, bps1];
+      w = transPt(trot(-pi / 3), w);
+      newHOutline.push(padd(newHOutline[1], w));
+      newHOutline.push(patch.evalChild(14, 2));
+      w = transPt(trot(-pi / 3), w);
+      newHOutline.push(psub(newHOutline[3], w));
+      newHOutline.push(patch.evalChild(6, 2));
+
+      const newH = new MetaTile(newHOutline, patch.width * 2);
+      for (const child of [0, 9, 16, 27, 26, 6, 1, 8, 10, 15]) {
+        newH.addChild(patch.children[child].T, patch.children[child].geom);
+      }
+
+      const newPOutline = [p72, padd(p72, psub(bps1, llc)), bps1, llc];
+      const newP = new MetaTile(newPOutline, patch.width * 2);
+      for (const child of [7, 2, 3, 4, 28]) {
+        newP.addChild(patch.children[child].T, patch.children[child].geom);
+      }
+
+      const newFOutline = [
+        bps2,
+        patch.evalChild(24, 2),
+        patch.evalChild(25, 0),
+        p252,
+        padd(p252, psub(llc, bps1)),
+      ];
+      const newF = new MetaTile(newFOutline, patch.width * 2);
+      for (const child of [21, 20, 22, 23, 24, 25]) {
+        newF.addChild(patch.children[child].T, patch.children[child].geom);
+      }
+
+      const AAA = newHOutline[2];
+      const BBB = padd(newHOutline[1], psub(newHOutline[4], newHOutline[5]));
+      const CCC = transPt(rotAbout(BBB, -pi / 3), AAA);
+      const newT = new MetaTile([BBB, CCC, AAA], patch.width * 2);
+      newT.addChild(patch.children[11].T, patch.children[11].geom);
+
+      newH.recenter();
+      newP.recenter();
+      newF.recenter();
+      newT.recenter();
+
+      return [newH, newT, newP, newF];
+    }
+
+    function buildTiles(iterations) {
+      let metas = createInitialTiles();
+      for (let i = 0; i < iterations; i += 1) {
+        metas = constructMetatiles(constructPatch(...metas));
+      }
+
+      const out = [];
+      metas[0].collect(ident, out);
+      return out;
+    }
+
+    function computeTileBounds(tile) {
+      const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+      for (const p of hatOutline) {
+        const q = transPt(tile.T, p);
+        b.minX = Math.min(b.minX, q.x);
+        b.maxX = Math.max(b.maxX, q.x);
+        b.minY = Math.min(b.minY, q.y);
+        b.maxY = Math.max(b.maxY, q.y);
+      }
+      return b;
+    }
+
+    function computeBounds(tileList) {
+      const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+      for (const tile of tileList) {
+        tile.bounds = computeTileBounds(tile);
+        b.minX = Math.min(b.minX, tile.bounds.minX);
+        b.maxX = Math.max(b.maxX, tile.bounds.maxX);
+        b.minY = Math.min(b.minY, tile.bounds.minY);
+        b.maxY = Math.max(b.maxY, tile.bounds.maxY);
+      }
+      return b;
+    }
+
+    function indexKey(cx, cy) {
+      return `${cx},${cy}`;
+    }
+
+    function buildSpatialIndex(tileList) {
+      spatialIndex = new Map();
+      for (const tile of tileList) {
+        const minCellX = Math.floor(tile.bounds.minX / gridCellSize);
+        const maxCellX = Math.floor(tile.bounds.maxX / gridCellSize);
+        const minCellY = Math.floor(tile.bounds.minY / gridCellSize);
+        const maxCellY = Math.floor(tile.bounds.maxY / gridCellSize);
+
+        for (let cy = minCellY; cy <= maxCellY; cy += 1) {
+          for (let cx = minCellX; cx <= maxCellX; cx += 1) {
+            const key = indexKey(cx, cy);
+            let cell = spatialIndex.get(key);
+            if (!cell) {
+              cell = [];
+              spatialIndex.set(key, cell);
+            }
+            cell.push(tile);
+          }
+        }
+      }
+    }
+
+    function rebuildPatch() {
+      leaves = buildTiles(6);
+      bounds = computeBounds(leaves);
+      buildSpatialIndex(leaves);
+      resetView();
+    }
+
+    function resetView() {
+      scale = width < 720 ? 36 : 44;
+      panX = width / 2 - ((bounds.minX + bounds.maxX) / 2) * scale;
+      panY = height / 2 + ((bounds.minY + bounds.maxY) / 2) * scale;
+      queueRender();
+    }
+
+    function resize() {
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (bounds) {
+        resetView();
+      }
+    }
+
+    function worldToScreen(p) {
+      return {
+        x: p.x * scale + panX,
+        y: -p.y * scale + panY,
+      };
+    }
+
+    function screenToWorld(x, y) {
+      return {
+        x: (x - panX) / scale,
+        y: -(y - panY) / scale,
+      };
+    }
+
+    function isVisible(tile) {
+      const margin = 4 / scale;
+      const viewMin = screenToWorld(-80, height + 80);
+      const viewMax = screenToWorld(width + 80, -80);
+      const b = tile.bounds;
+      return b.maxX >= viewMin.x - margin && b.minX <= viewMax.x + margin && b.maxY >= viewMin.y - margin && b.minY <= viewMax.y + margin;
+    }
+
+    function visibleTiles() {
+      const viewMin = screenToWorld(-100, height + 100);
+      const viewMax = screenToWorld(width + 100, -100);
+      const minCellX = Math.floor(viewMin.x / gridCellSize);
+      const maxCellX = Math.floor(viewMax.x / gridCellSize);
+      const minCellY = Math.floor(viewMin.y / gridCellSize);
+      const maxCellY = Math.floor(viewMax.y / gridCellSize);
+      const seen = new Set();
+      const out = [];
+
+      for (let cy = minCellY; cy <= maxCellY; cy += 1) {
+        for (let cx = minCellX; cx <= maxCellX; cx += 1) {
+          const cell = spatialIndex.get(indexKey(cx, cy));
+          if (!cell) {
+            continue;
+          }
+
+          for (const tile of cell) {
+            if (!seen.has(tile) && isVisible(tile)) {
+              seen.add(tile);
+              out.push(tile);
+            }
+          }
+        }
+      }
+
+      return out;
+    }
+
+    function screenPolygon(tile) {
+      return hatOutline.map((p) => worldToScreen(transPt(tile.T, p)));
+    }
+
+    function beginPolygon(points) {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i += 1) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+    }
+
+    function polygonCentroid(points) {
+      let x = 0;
+      let y = 0;
+      for (const p of points) {
+        x += p.x;
+        y += p.y;
+      }
+      return pt(x / points.length, y / points.length);
+    }
+
+    function insetPoint(point, centre, amount) {
+      const dx = centre.x - point.x;
+      const dy = centre.y - point.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 0.001) {
+        return point;
+      }
+
+      return pt(point.x + dx / length * amount, point.y + dy / length * amount);
+    }
+
+    function verticalBoundaryHit(points, origin, skipEdgeA, skipEdgeB) {
+      const x = origin.x;
+      const y = origin.y;
+      const eps = 0.35;
+      let best = null;
+      let bestY = Infinity;
+
+      for (let i = 0; i < points.length; i += 1) {
+        const next = (i + 1) % points.length;
+        if (i === skipEdgeA || i === skipEdgeB) {
+          continue;
+        }
+
+        const a = points[i];
+        const b = points[next];
+        const dx = b.x - a.x;
+
+        if (Math.abs(dx) < eps) {
+          if (Math.abs(x - a.x) > eps) {
+            continue;
+          }
+          const lowerY = Math.max(a.y, b.y);
+          const upperY = Math.min(a.y, b.y);
+          if (lowerY > y + eps && upperY <= lowerY) {
+            const hitY = Math.max(y + eps, upperY);
+            if (hitY > y + eps && hitY < bestY) {
+              bestY = hitY;
+              best = pt(x, hitY);
+            }
+          }
+          continue;
+        }
+
+        let t = (x - a.x) / dx;
+        if (t < -0.001 || t > 1.001) {
+          continue;
+        }
+        t = Math.min(1, Math.max(0, t));
+
+        const hitY = a.y + t * (b.y - a.y);
+        if (hitY > y + eps && hitY < bestY) {
+          bestY = hitY;
+          best = pt(x, hitY);
+        }
+      }
+
+      return best;
+    }
+
+    function drawDepthLines(points, color) {
+      ctx.save();
+      beginPolygon(points);
+      ctx.clip();
+      ctx.lineCap = "round";
+      const centre = polygonCentroid(points);
+      const inset = Math.max(1.6, scale * 0.045);
+      const highlight = mixColor(color, { r: 118, g: 122, b: 118 }, 0.38);
+      const midtone = mixColor(color, { r: 62, g: 69, b: 70 }, 0.58);
+      const shadow = mixColor(color, { r: 18, g: 21, b: 24 }, 0.78);
+
+      for (let i = 0; i < points.length; i += 1) {
+        const start = insetPoint(points[i], centre, inset);
+        const prevEdge = (i - 1 + points.length) % points.length;
+        const hit = verticalBoundaryHit(points, start, i, prevEdge);
+        if (!hit) {
+          continue;
+        }
+
+        if (hit.y - start.y < 5) {
+          continue;
+        }
+
+        ctx.lineWidth = Math.max(1.2, scale * 0.034);
+        ctx.strokeStyle = colorString(shadow, 0.38);
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y + 1);
+        ctx.lineTo(hit.x, hit.y - 1);
+        ctx.stroke();
+
+        const grad = ctx.createLinearGradient(start.x, start.y, hit.x, hit.y);
+        grad.addColorStop(0, colorString(highlight, 0.58));
+        grad.addColorStop(0.3, colorString(midtone, 0.5));
+        grad.addColorStop(0.78, colorString(shadow, 0.3));
+        grad.addColorStop(1, colorString(shadow, 0.08));
+
+        ctx.lineWidth = Math.max(0.75, scale * 0.014);
+        ctx.strokeStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y + 1.2);
+        ctx.lineTo(hit.x, hit.y - 1.2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawTile(tile) {
+      const points = screenPolygon(tile);
+      const minY = Math.min(...points.map((p) => p.y));
+      const maxY = Math.max(...points.map((p) => p.y));
+      const minX = Math.min(...points.map((p) => p.x));
+      const maxX = Math.max(...points.map((p) => p.x));
+      const color = tile.color;
+
+      beginPolygon(points);
+      const depth = ctx.createLinearGradient(0, minY, 0, maxY);
+      depth.addColorStop(0, `rgba(${Math.round(color.r * 0.7)}, ${Math.round(color.g * 0.7)}, ${Math.round(color.b * 0.7)}, 0.98)`);
+      depth.addColorStop(0.28, `rgba(${Math.round(color.r * 0.48)}, ${Math.round(color.g * 0.48)}, ${Math.round(color.b * 0.48)}, 0.98)`);
+      depth.addColorStop(0.76, "rgba(32, 36, 39, 0.99)");
+      depth.addColorStop(1, "rgb(12, 14, 18)");
+      ctx.fillStyle = depth;
+      ctx.fill();
+
+      const glow = ctx.createRadialGradient(
+        (minX + maxX) * 0.5,
+        minY + (maxY - minY) * 0.2,
+        1,
+        (minX + maxX) * 0.5,
+        minY + (maxY - minY) * 0.25,
+        Math.max(maxX - minX, maxY - minY) * 0.68,
+      );
+      glow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.24)`);
+      glow.addColorStop(0.42, "rgba(255, 255, 255, 0.035)");
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      beginPolygon(points);
+      ctx.fillStyle = glow;
+      ctx.fill();
+
+      drawDepthLines(points, color);
+    }
+
+    function draw() {
+      renderQueued = false;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#f1eee5";
+      ctx.fillRect(0, 0, width, height);
+
+      for (const tile of visibleTiles()) {
+        drawTile(tile);
+      }
+    }
+
+    function queueRender() {
+      if (renderQueued) {
+        return;
+      }
+      renderQueued = true;
+      requestAnimationFrame(draw);
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      if (activePointerId !== null) {
+        return;
+      }
+
+      activePointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      startPanX = panX;
+      startPanY = panY;
+      canvas.classList.add("dragging");
+      canvas.setPointerCapture(activePointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (event.pointerId !== activePointerId) {
+        return;
+      }
+
+      panX = startPanX + event.clientX - startX;
+      panY = startPanY + event.clientY - startY;
+      queueRender();
+    });
+
+    function endDrag(event) {
+      if (event.pointerId !== activePointerId) {
+        return;
+      }
+
+      activePointerId = null;
+      canvas.classList.remove("dragging");
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+
+    resetButton.addEventListener("click", () => {
+      resetView();
+    });
+
+    window.addEventListener("resize", resize);
+
+    resize();
+    rebuildPatch();
+  </script>
+</body>
+</html>
