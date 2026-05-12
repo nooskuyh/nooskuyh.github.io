@@ -7,13 +7,13 @@
   <style>
     :root {
       color-scheme: dark;
-      --bg: #050505;
-      --ink: #f7f2e4;
-      --panel: rgba(12, 12, 12, 0.72);
-      --panel-border: rgba(247, 242, 228, 0.22);
+      --bg: #03040d;
+      --ink: #f7f4ff;
+      --panel: rgba(8, 7, 23, 0.72);
+      --panel-border: rgba(203, 188, 255, 0.27);
       --button-bg: rgba(255, 255, 255, 0.1);
       --button-hover: rgba(255, 255, 255, 0.18);
-      --active: #f3c742;
+      --active: #d8c7ff;
     }
 
     * {
@@ -168,7 +168,7 @@
 
   <div class="hud">
     <div class="control-panel theme-panel" aria-label="Color themes">
-      <button class="theme-option" type="button" data-theme="hole" aria-label="Hole theme" aria-pressed="true" title="Hole">
+      <button class="theme-option" type="button" data-theme="hole" aria-label="Hole theme" aria-pressed="false" title="Hole">
         <span class="sr-only">Hole</span>
       </button>
       <button class="theme-option" type="button" data-theme="ocean" aria-label="Ocean theme" aria-pressed="false" title="Ocean">
@@ -177,7 +177,7 @@
       <button class="theme-option" type="button" data-theme="fire" aria-label="Fire theme" aria-pressed="false" title="Fire">
         <span class="sr-only">Fire</span>
       </button>
-      <button class="theme-option" type="button" data-theme="cosmic" aria-label="COSMIC theme" aria-pressed="false" title="COSMIC">
+      <button class="theme-option" type="button" data-theme="cosmic" aria-label="COSMIC theme" aria-pressed="true" title="COSMIC">
         <span class="sr-only">COSMIC</span>
       </button>
     </div>
@@ -253,6 +253,8 @@
     const ident = [1, 0, 0, 0, 1, 0];
     const holeLineInset = 0.05;
     const holeMinLineDepth = 4;
+    const tileFieldExtent = Math.sqrt(0.4);
+    const tileMotionDuration = 780;
     const sharedTileColor = { r: 142, g: 165, b: 156, css: "rgb(142, 165, 156)" };
     const geometryWasmBase64 =
       "AGFzbQEAAAABHgRgAAF/YAJ/fwF/YAN/f38Bf2AJf3x8fHx8fHx/AAMIBwAAAAECAQMFAwEAMAYZA38BQYCAwAALfwBBgIDAAQt/AEGAgMABCweHAQoGbWVtb3J5AgAJaW5wdXRfcHRyAAAKb3V0cHV0X3B0cgABCm1heF9wb2ludHMAAgpjb2xvcl9oYXNoAAMMcGFsZXR0ZV9zbG90AAQKdG9uZV9kZWx0YQAFEHRyYW5zZm9ybV9wb2ludHMABgpfX2RhdGFfZW5kAwELX19oZWFwX2Jhc2UDAgqWBAcIAEGAgMCAAAsIAEGAgICBAAsGAEGAgAQLQgAgAEGx893xeWwgAUH3lK+veGxzQb3cypV8cyIBQRB2IAFzQa3qrP8HbCIBQQ92IAFzQYvNsqN4bCIBQRB2IAFzC08AAkAgAg0AQQAPCyAAQbHz3fF5bCABQfeUr694bHNBvdzKlXxzIgFBEHYgAXNBreqs/wdsIgFBD3YgAXNBi82yo3hsIgFBEHYgAXMgAnALVgAgAEGx893xeWxB7/jexQJqIAFB95Svr3hsQZmc3toBanNBvdzKlXxzIgFBEHYgAXNBreqs/wdsIgFBD3YgAXNBi82yo3hsIgFBEHYgAXNBGXBBdGoLkAIBAnwCQCAARQ0AIABBgIAEIABBgIAESRshAAJAIAhFDQAgAkQAAAAAAADgP6IhAiABRAAAAAAAAOA/oiEBIABBBHQhCEEAIQADQCAAQYiAgIEAaiACIAcgBCADIABBgIDAgABqKwMAoqAgAaEiCaKgIAYgBSADIABBiIDAgABqKwMAoqEgAqEiCqKgOQMAIABBgICAgQBqIAEgBiAJoqAgByAKoqE5AwAgCCAAQRBqIgBHDQAMAgsLIABBBHQhCEEAIQADQCAAQYiAgIEAaiAFIAMgAEGIgMCAAGorAwCioTkDACAAQYCAgIEAaiAEIAMgAEGAgMCAAGorAwCioDkDACAIIABBEGoiAEcNAAsLCwCRAQRuYW1lABgXZWluc3RlaW5fdHJhbnNmb3JtLndhc20BXAcACWlucHV0X3B0cgEKb3V0cHV0X3B0cgIKbWF4X3BvaW50cwMKY29sb3JfaGFzaAQMcGFsZXR0ZV9zbG90BQp0b25lX2RlbHRhBhB0cmFuc2Zvcm1fcG9pbnRzBxIBAA9fX3N0YWNrX3BvaW50ZXIAPQlwcm9kdWNlcnMBDHByb2Nlc3NlZC1ieQEFcnVzdGMdMS44Ny4wICgxNzA2N2U5YWMgMjAyNS0wNS0wOSkAlAEPdGFyZ2V0X2ZlYXR1cmVzCCsLYnVsay1tZW1vcnkrD2J1bGstbWVtb3J5LW9wdCsWY2FsbC1pbmRpcmVjdC1vdmVybG9uZysKbXVsdGl2YWx1ZSsPbXV0YWJsZS1nbG9iYWxzKxNub250cmFwcGluZy1mcHRvaW50Kw9yZWZlcmVuY2UtdHlwZXMrCHNpZ24tZXh0";
@@ -324,7 +326,7 @@
     let bounds = null;
     let spatialIndex = new Map();
     let gridCellSize = 12;
-    let currentTheme = themes.hole;
+    let currentTheme = themes.cosmic;
     let wasmPalette = null;
     let wasmMemory = null;
     let wasmInputOffset = 0;
@@ -335,6 +337,7 @@
     let spinAngle = 0;
     let lastFrameTime = 0;
     let cachedLocalHoleGeometry = null;
+    let tileMotion = new Map();
 
     function pt(x, y) {
       return { x, y };
@@ -816,10 +819,12 @@
 
     function computeBounds(tileList) {
       const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-      for (const tile of tileList) {
+      for (let i = 0; i < tileList.length; i += 1) {
+        const tile = tileList[i];
         tile.seed = seededNoise(tile.T[2], tile.T[5]);
         tile.hashX = Math.round(tile.T[2] * 1000);
         tile.hashY = Math.round(tile.T[5] * 1000);
+        tile.motionKey = `${i}:${tile.hashX}:${tile.hashY}`;
         tile.geometry = buildTileGeometry(tile);
         tile.bounds = computePointBounds(tile.geometry.outline);
         b.minX = Math.min(b.minX, tile.bounds.minX);
@@ -868,6 +873,7 @@
       scale = width < 720 ? 36 : 44;
       panX = width / 2 - ((bounds.minX + bounds.maxX) / 2) * scale;
       panY = height / 2 + ((bounds.minY + bounds.maxY) / 2) * scale;
+      tileMotion.clear();
       queueRender();
     }
 
@@ -906,9 +912,23 @@
     }
 
     function screenToWorld(x, y) {
+      let screenX = x;
+      let screenY = y;
+
+      if (hasSpinTransform()) {
+        const cx = width * 0.5;
+        const cy = height * 0.5;
+        const dx = x - cx;
+        const dy = y - cy;
+        const c = Math.cos(spinAngle);
+        const s = Math.sin(spinAngle);
+        screenX = cx + dx * c + dy * s;
+        screenY = cy - dx * s + dy * c;
+      }
+
       return {
-        x: (x - panX) / scale,
-        y: -(y - panY) / scale,
+        x: (screenX - panX) / scale,
+        y: -(screenY - panY) / scale,
       };
     }
 
@@ -916,23 +936,156 @@
       return Math.abs(spinAngle) > 0.0001;
     }
 
+    function screenDeltaToPanDelta(dx, dy) {
+      if (!hasSpinTransform()) {
+        return { x: dx, y: dy };
+      }
+
+      const c = Math.cos(spinAngle);
+      const s = Math.sin(spinAngle);
+      return {
+        x: dx * c + dy * s,
+        y: -dx * s + dy * c,
+      };
+    }
+
+    function tileFieldRect() {
+      const fieldWidth = width * tileFieldExtent;
+      const fieldHeight = height * tileFieldExtent;
+      return {
+        left: (width - fieldWidth) * 0.5,
+        top: (height - fieldHeight) * 0.5,
+        right: (width + fieldWidth) * 0.5,
+        bottom: (height + fieldHeight) * 0.5,
+      };
+    }
+
+    function screenRectToWorldBounds(rect, margin = 0) {
+      const corners = [
+        screenToWorld(rect.left - margin, rect.top - margin),
+        screenToWorld(rect.right + margin, rect.top - margin),
+        screenToWorld(rect.right + margin, rect.bottom + margin),
+        screenToWorld(rect.left - margin, rect.bottom + margin),
+      ];
+      return computePointBounds(corners);
+    }
+
+    function screenPointsBounds(points) {
+      return computePointBounds(points);
+    }
+
+    function boundsOverlap(a, b) {
+      return a.maxX >= b.minX && a.minX <= b.maxX && a.maxY >= b.minY && a.minY <= b.maxY;
+    }
+
+    function rectCornerPoints(rect) {
+      return [
+        pt(rect.left, rect.top),
+        pt(rect.right, rect.top),
+        pt(rect.right, rect.bottom),
+        pt(rect.left, rect.bottom),
+      ];
+    }
+
+    function pointsTouchRect(points, rect) {
+      const pointBounds = screenPointsBounds(points);
+      const rectBounds = { minX: rect.left, minY: rect.top, maxX: rect.right, maxY: rect.bottom };
+      if (!boundsOverlap(pointBounds, rectBounds)) {
+        return false;
+      }
+
+      return points.some((point) => point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom)
+        || rectCornerPoints(rect).some((corner) => pointInPolygon(corner, points));
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function flyStartPoint(target, tile) {
+      const offscreen = Math.max(140, Math.min(width, height) * 0.18);
+      const drift = (seededNoise(tile.hashY, tile.hashX) - 0.5) * Math.min(width, height) * 0.34;
+      const side = Math.floor(tile.seed * 4);
+
+      if (side === 0) {
+        return pt(-offscreen, target.y + drift);
+      }
+      if (side === 1) {
+        return pt(width + offscreen, target.y + drift);
+      }
+      if (side === 2) {
+        return pt(target.x + drift, -offscreen);
+      }
+      return pt(target.x + drift, height + offscreen);
+    }
+
+    function animateTileIntoField(item, time, activeKeys) {
+      const key = item.tile.motionKey;
+      activeKeys.add(key);
+
+      let motion = tileMotion.get(key);
+      const targetCenter = polygonCentroid(item.points);
+
+      if (!motion) {
+        motion = {
+          startTime: time,
+          from: flyStartPoint(targetCenter, item.tile),
+        };
+        tileMotion.set(key, motion);
+      }
+
+      const progress = Math.min(1, (time - motion.startTime) / tileMotionDuration);
+      const eased = easeOutCubic(progress);
+      const offsetX = (motion.from.x - targetCenter.x) * (1 - eased);
+      const offsetY = (motion.from.y - targetCenter.y) * (1 - eased);
+
+      return {
+        ...item,
+        points: item.points.map((point) => pt(point.x + offsetX, point.y + offsetY)),
+        holeStarts: item.holeStarts.map((start) => ({
+          ...start,
+          point: pt(start.point.x + offsetX, start.point.y + offsetY),
+        })),
+        opacity: 0.18 + eased * 0.82,
+      };
+    }
+
+    function animatePreparedTiles(items, time) {
+      const fieldRect = tileFieldRect();
+      const activeKeys = new Set();
+      const animated = [];
+
+      for (const item of items) {
+        if (pointsTouchRect(item.points, fieldRect)) {
+          animated.push(animateTileIntoField(item, time, activeKeys));
+        }
+      }
+
+      for (const key of tileMotion.keys()) {
+        if (!activeKeys.has(key)) {
+          tileMotion.delete(key);
+        }
+      }
+
+      if (animated.some((item) => item.opacity < 0.999)) {
+        queueRender();
+      }
+
+      return animated;
+    }
+
     function isVisible(tile) {
-      const screenMargin = hasSpinTransform() ? Math.hypot(width, height) * 0.42 : 80;
-      const margin = screenMargin / scale;
-      const viewMin = screenToWorld(-screenMargin, height + screenMargin);
-      const viewMax = screenToWorld(width + screenMargin, -screenMargin);
+      const worldBounds = screenRectToWorldBounds(tileFieldRect(), Math.max(120, scale * 5));
       const b = tile.bounds;
-      return b.maxX >= viewMin.x - margin && b.minX <= viewMax.x + margin && b.maxY >= viewMin.y - margin && b.minY <= viewMax.y + margin;
+      return boundsOverlap(b, worldBounds);
     }
 
     function visibleTiles() {
-      const screenMargin = hasSpinTransform() ? Math.hypot(width, height) * 0.42 : 100;
-      const viewMin = screenToWorld(-screenMargin, height + screenMargin);
-      const viewMax = screenToWorld(width + screenMargin, -screenMargin);
-      const minCellX = Math.floor(viewMin.x / gridCellSize);
-      const maxCellX = Math.floor(viewMax.x / gridCellSize);
-      const minCellY = Math.floor(viewMin.y / gridCellSize);
-      const maxCellY = Math.floor(viewMax.y / gridCellSize);
+      const worldBounds = screenRectToWorldBounds(tileFieldRect(), Math.max(140, scale * 6));
+      const minCellX = Math.floor(worldBounds.minX / gridCellSize);
+      const maxCellX = Math.floor(worldBounds.maxX / gridCellSize);
+      const minCellY = Math.floor(worldBounds.minY / gridCellSize);
+      const maxCellY = Math.floor(worldBounds.maxY / gridCellSize);
       const seen = new Set();
       const out = [];
 
@@ -977,10 +1130,12 @@
       ctx.fillRect(0, 0, width, height);
 
       if (currentTheme.key === "hole") {
+        drawStars(time, 0.58);
         return;
       }
 
       if (currentTheme.key === "ocean") {
+        drawStars(time, 0.24);
         const glow = ctx.createRadialGradient(width * 0.64, height * 0.2, 0, width * 0.64, height * 0.2, Math.max(width, height) * 0.76);
         glow.addColorStop(0, "rgba(137, 255, 237, 0.24)");
         glow.addColorStop(0.42, "rgba(23, 160, 191, 0.12)");
@@ -991,6 +1146,7 @@
       }
 
       if (currentTheme.key === "fire") {
+        drawStars(time, 0.2);
         const ember = ctx.createRadialGradient(width * 0.48, height * 0.98, 0, width * 0.48, height * 0.98, Math.max(width, height) * 0.72);
         ember.addColorStop(0, "rgba(255, 111, 24, 0.42)");
         ember.addColorStop(0.36, "rgba(175, 35, 7, 0.2)");
@@ -1069,7 +1225,7 @@
       }
     }
 
-    function prepareVisibleTiles() {
+    function prepareVisibleTiles(time) {
       const tiles = visibleTiles();
       const vertexCount = hatOutline.length;
       const pointsPerTile = dropEnabled
@@ -1124,7 +1280,7 @@
           hasSpinTransform() ? 1 : 0,
         );
 
-        return items.map((item) => {
+        const prepared = items.map((item) => {
           const points = [];
           for (let i = 0; i < vertexCount; i += 1) {
             const index = wasmOutputOffset + (item.outlineOffset + i) * 2;
@@ -1146,9 +1302,11 @@
             holeStarts,
           };
         });
+
+        return animatePreparedTiles(prepared, time);
       }
 
-      return tiles.map((tile) => {
+      const prepared = tiles.map((tile) => {
         const geometry = tile.geometry || buildTileGeometry(tile);
         return {
           tile,
@@ -1160,6 +1318,8 @@
           })) : [],
         };
       });
+
+      return animatePreparedTiles(prepared, time);
     }
 
     function polygonCentroid(points) {
@@ -1339,6 +1499,9 @@
       const { tile, points, holeStarts } = item;
       const fill = tile.fill || hexToColor(currentTheme.palette[0]);
 
+      ctx.save();
+      ctx.globalAlpha *= item.opacity ?? 1;
+
       beginPolygon(points);
       ctx.fillStyle = colorString(fill, 1);
       ctx.fill();
@@ -1352,6 +1515,7 @@
       ctx.strokeStyle = currentTheme.edge;
       ctx.lineWidth = Math.max(0.45, scale * 0.008);
       ctx.stroke();
+      ctx.restore();
     }
 
     function draw(time = performance.now()) {
@@ -1366,10 +1530,16 @@
       ctx.clearRect(0, 0, width, height);
       drawBackground(time);
 
-      const tiles = prepareVisibleTiles();
+      const tiles = prepareVisibleTiles(time);
+      const fieldRect = tileFieldRect();
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(fieldRect.left, fieldRect.top, fieldRect.right - fieldRect.left, fieldRect.bottom - fieldRect.top);
+      ctx.clip();
       for (const item of tiles) {
         drawTile(item);
       }
+      ctx.restore();
 
       drawAtmosphere(time);
 
@@ -1405,8 +1575,9 @@
         return;
       }
 
-      panX = startPanX + event.clientX - startX;
-      panY = startPanY + event.clientY - startY;
+      const delta = screenDeltaToPanDelta(event.clientX - startX, event.clientY - startY);
+      panX = startPanX + delta.x;
+      panY = startPanY + delta.y;
       queueRender();
     });
 
