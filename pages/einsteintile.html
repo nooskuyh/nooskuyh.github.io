@@ -246,8 +246,8 @@
     const pi = Math.PI;
     const ident = [1, 0, 0, 0, 1, 0];
     const sharedTileColor = { r: 142, g: 165, b: 156, css: "rgb(142, 165, 156)" };
-    const paletteWasmBase64 =
-      "AGFzbQEAAAABDgJgAn9/AX9gA39/fwF/AwQDAAEABQMBABAGGQN/AUGAgMAAC38AQYCAwAALfwBBgIDAAAsHTgYGbWVtb3J5AgAKY29sb3JfaGFzaAAADHBhbGV0dGVfc2xvdAABCnRvbmVfZGVsdGEAAgpfX2RhdGFfZW5kAwELX19oZWFwX2Jhc2UDAgrrAQNCACAAQbHz3fF5bCABQfeUr694bHNBvdzKlXxzIgFBEHYgAXNBreqs/wdsIgFBD3YgAXNBi82yo3hsIgFBEHYgAXMLTwACQCACDQBBAA8LIABBsfPd8XlsIAFB95Svr3hsc0G93MqVfHMiAUEQdiABc0Gt6qz/B2wiAUEPdiABc0GLzbKjeGwiAUEQdiABcyACcAtWACAAQbHz3fF5bEHv+N7FAmogAUH3lK+veGxBmZze2gFqc0G93MqVfHMiAUEQdiABc0Gt6qz/B2wiAUEPdiABc0GLzbKjeGwiAUEQdiABc0EZcEF0agsAWgRuYW1lABYVZWluc3RlaW5fcGFsZXR0ZS53YXNtAScDAApjb2xvcl9oYXNoAQxwYWxldHRlX3Nsb3QCCnRvbmVfZGVsdGEHEgEAD19fc3RhY2tfcG9pbnRlcgA9CXByb2R1Y2VycwEMcHJvY2Vzc2VkLWJ5AQVydXN0Yx0xLjg3LjAgKDE3MDY3ZTlhYyAyMDI1LTA1LTA5KQCUAQ90YXJnZXRfZmVhdHVyZXMIKwtidWxrLW1lbW9yeSsPYnVsay1tZW1vcnktb3B0KxZjYWxsLWluZGlyZWN0LW92ZXJsb25nKwptdWx0aXZhbHVlKw9tdXRhYmxlLWdsb2JhbHMrE25vbnRyYXBwaW5nLWZwdG9pbnQrD3JlZmVyZW5jZS10eXBlcysIc2lnbi1leHQ=";
+    const geometryWasmBase64 =
+      "AGFzbQEAAAABHgRgAAF/YAJ/fwF/YAN/f38Bf2AJf3x8fHx8fHx/AAMIBwAAAAECAQMFAwEAMAYZA38BQYCAwAALfwBBgIDAAQt/AEGAgMABCweHAQoGbWVtb3J5AgAJaW5wdXRfcHRyAAAKb3V0cHV0X3B0cgABCm1heF9wb2ludHMAAgpjb2xvcl9oYXNoAAMMcGFsZXR0ZV9zbG90AAQKdG9uZV9kZWx0YQAFEHRyYW5zZm9ybV9wb2ludHMABgpfX2RhdGFfZW5kAwELX19oZWFwX2Jhc2UDAgqWBAcIAEGAgMCAAAsIAEGAgICBAAsGAEGAgAQLQgAgAEGx893xeWwgAUH3lK+veGxzQb3cypV8cyIBQRB2IAFzQa3qrP8HbCIBQQ92IAFzQYvNsqN4bCIBQRB2IAFzC08AAkAgAg0AQQAPCyAAQbHz3fF5bCABQfeUr694bHNBvdzKlXxzIgFBEHYgAXNBreqs/wdsIgFBD3YgAXNBi82yo3hsIgFBEHYgAXMgAnALVgAgAEGx893xeWxB7/jexQJqIAFB95Svr3hsQZmc3toBanNBvdzKlXxzIgFBEHYgAXNBreqs/wdsIgFBD3YgAXNBi82yo3hsIgFBEHYgAXNBGXBBdGoLkAIBAnwCQCAARQ0AIABBgIAEIABBgIAESRshAAJAIAhFDQAgAkQAAAAAAADgP6IhAiABRAAAAAAAAOA/oiEBIABBBHQhCEEAIQADQCAAQYiAgIEAaiACIAcgBCADIABBgIDAgABqKwMAoqAgAaEiCaKgIAYgBSADIABBiIDAgABqKwMAoqEgAqEiCqKgOQMAIABBgICAgQBqIAEgBiAJoqAgByAKoqE5AwAgCCAAQRBqIgBHDQAMAgsLIABBBHQhCEEAIQADQCAAQYiAgIEAaiAFIAMgAEGIgMCAAGorAwCioTkDACAAQYCAgIEAaiAEIAMgAEGAgMCAAGorAwCioDkDACAIIABBEGoiAEcNAAsLCwCRAQRuYW1lABgXZWluc3RlaW5fdHJhbnNmb3JtLndhc20BXAcACWlucHV0X3B0cgEKb3V0cHV0X3B0cgIKbWF4X3BvaW50cwMKY29sb3JfaGFzaAQMcGFsZXR0ZV9zbG90BQp0b25lX2RlbHRhBhB0cmFuc2Zvcm1fcG9pbnRzBxIBAA9fX3N0YWNrX3BvaW50ZXIAPQlwcm9kdWNlcnMBDHByb2Nlc3NlZC1ieQEFcnVzdGMdMS44Ny4wICgxNzA2N2U5YWMgMjAyNS0wNS0wOSkAlAEPdGFyZ2V0X2ZlYXR1cmVzCCsLYnVsay1tZW1vcnkrD2J1bGstbWVtb3J5LW9wdCsWY2FsbC1pbmRpcmVjdC1vdmVybG9uZysKbXVsdGl2YWx1ZSsPbXV0YWJsZS1nbG9iYWxzKxNub250cmFwcGluZy1mcHRvaW50Kw9yZWZlcmVuY2UtdHlwZXMrCHNpZ24tZXh0";
     const themes = {
       hole: {
         key: "hole",
@@ -318,6 +318,10 @@
     let gridCellSize = 12;
     let currentTheme = themes.hole;
     let wasmPalette = null;
+    let wasmMemory = null;
+    let wasmInputOffset = 0;
+    let wasmOutputOffset = 0;
+    let wasmMaxPoints = 0;
     let spinEnabled = false;
     let dropEnabled = false;
     let spinAngle = 0;
@@ -541,19 +545,23 @@
       return fallbackHash(a + 31, b - 17) % 25 - 12;
     }
 
-    async function initPaletteWasm() {
+    async function initGeometryWasm() {
       if (!("WebAssembly" in window)) {
         return;
       }
 
       try {
-        const bytes = Uint8Array.from(atob(paletteWasmBase64), (char) => char.charCodeAt(0));
+        const bytes = Uint8Array.from(atob(geometryWasmBase64), (char) => char.charCodeAt(0));
         const { instance } = await WebAssembly.instantiate(bytes);
         wasmPalette = instance.exports;
+        wasmMemory = new Float64Array(wasmPalette.memory.buffer);
+        wasmInputOffset = wasmPalette.input_ptr() / Float64Array.BYTES_PER_ELEMENT;
+        wasmOutputOffset = wasmPalette.output_ptr() / Float64Array.BYTES_PER_ELEMENT;
+        wasmMaxPoints = wasmPalette.max_points();
         assignTileStyles();
         queueRender();
       } catch (error) {
-        console.warn("Palette wasm failed to initialize; using JS fallback.", error);
+        console.warn("Geometry wasm failed to initialize; using JS fallback.", error);
       }
     }
 
@@ -917,6 +925,10 @@
       return out;
     }
 
+    function worldPolygon(tile) {
+      return hatOutline.map((p) => transPt(tile.T, p));
+    }
+
     function screenPolygon(tile) {
       return hatOutline.map((p) => worldToScreen(transPt(tile.T, p)));
     }
@@ -1028,11 +1040,56 @@
     }
 
     function prepareVisibleTiles() {
-      return visibleTiles().map((tile) => {
-        const points = screenPolygon(tile);
+      const tiles = visibleTiles();
+      const vertexCount = hatOutline.length;
+      const pointCount = tiles.length * vertexCount;
+
+      if (wasmPalette && wasmMemory && pointCount <= wasmMaxPoints) {
+        const items = [];
+        let cursor = 0;
+
+        for (const tile of tiles) {
+          const offset = cursor;
+          items.push({ tile, offset });
+
+          for (const world of worldPolygon(tile)) {
+            const index = wasmInputOffset + cursor * 2;
+            wasmMemory[index] = world.x;
+            wasmMemory[index + 1] = world.y;
+            cursor += 1;
+          }
+        }
+
+        wasmPalette.transform_points(
+          pointCount,
+          width,
+          height,
+          scale,
+          panX,
+          panY,
+          Math.cos(spinAngle),
+          Math.sin(spinAngle),
+          hasSpinTransform() ? 1 : 0,
+        );
+
+        return items.map((item) => {
+          const points = [];
+          for (let i = 0; i < vertexCount; i += 1) {
+            const index = wasmOutputOffset + (item.offset + i) * 2;
+            points.push(pt(wasmMemory[index], wasmMemory[index + 1]));
+          }
+
+          return {
+            tile: item.tile,
+            points,
+          };
+        });
+      }
+
+      return tiles.map((tile) => {
         return {
           tile,
-          points,
+          points: screenPolygon(tile),
         };
       });
     }
@@ -1299,7 +1356,7 @@
 
     resize();
     rebuildPatch();
-    initPaletteWasm();
+    initGeometryWasm();
   </script>
 </body>
 </html>
