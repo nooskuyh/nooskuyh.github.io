@@ -960,6 +960,15 @@
       };
     }
 
+    function viewportRect() {
+      return {
+        left: 0,
+        top: 0,
+        right: width,
+        bottom: height,
+      };
+    }
+
     function screenRectToWorldBounds(rect, margin = 0) {
       const corners = [
         screenToWorld(rect.left - margin, rect.top - margin),
@@ -1002,21 +1011,21 @@
       return 1 - Math.pow(1 - t, 3);
     }
 
-    function flyStartPoint(target, tile) {
+    function flyStartPoint(target) {
+      const rect = tileFieldRect();
+      const cx = (rect.left + rect.right) * 0.5;
+      const cy = (rect.top + rect.bottom) * 0.5;
+      const dx = target.x - cx;
+      const dy = target.y - cy;
+      const fieldWidth = rect.right - rect.left;
+      const fieldHeight = rect.bottom - rect.top;
       const offscreen = Math.max(140, Math.min(width, height) * 0.18);
-      const drift = (seededNoise(tile.hashY, tile.hashX) - 0.5) * Math.min(width, height) * 0.34;
-      const side = Math.floor(tile.seed * 4);
 
-      if (side === 0) {
-        return pt(-offscreen, target.y + drift);
+      if (Math.abs(dx / fieldWidth) >= Math.abs(dy / fieldHeight)) {
+        return pt(dx < 0 ? -offscreen : width + offscreen, target.y);
       }
-      if (side === 1) {
-        return pt(width + offscreen, target.y + drift);
-      }
-      if (side === 2) {
-        return pt(target.x + drift, -offscreen);
-      }
-      return pt(target.x + drift, height + offscreen);
+
+      return pt(target.x, dy < 0 ? -offscreen : height + offscreen);
     }
 
     function animateTileIntoField(item, time, activeKeys) {
@@ -1029,7 +1038,7 @@
       if (!motion) {
         motion = {
           startTime: time,
-          from: flyStartPoint(targetCenter, item.tile),
+          from: flyStartPoint(targetCenter),
         };
         tileMotion.set(key, motion);
       }
@@ -1052,11 +1061,17 @@
 
     function animatePreparedTiles(items, time) {
       const fieldRect = tileFieldRect();
+      const screenRect = viewportRect();
       const activeKeys = new Set();
       const animated = [];
 
       for (const item of items) {
-        if (pointsTouchRect(item.points, fieldRect)) {
+        const key = item.tile.motionKey;
+        const isKnown = tileMotion.has(key);
+        const isInSpawnField = pointsTouchRect(item.points, fieldRect);
+        const isOnScreen = pointsTouchRect(item.points, screenRect);
+
+        if (isInSpawnField || (isKnown && isOnScreen)) {
           animated.push(animateTileIntoField(item, time, activeKeys));
         }
       }
@@ -1075,13 +1090,13 @@
     }
 
     function isVisible(tile) {
-      const worldBounds = screenRectToWorldBounds(tileFieldRect(), Math.max(120, scale * 5));
+      const worldBounds = screenRectToWorldBounds(viewportRect(), Math.max(120, scale * 5));
       const b = tile.bounds;
       return boundsOverlap(b, worldBounds);
     }
 
     function visibleTiles() {
-      const worldBounds = screenRectToWorldBounds(tileFieldRect(), Math.max(140, scale * 6));
+      const worldBounds = screenRectToWorldBounds(viewportRect(), Math.max(140, scale * 6));
       const minCellX = Math.floor(worldBounds.minX / gridCellSize);
       const maxCellX = Math.floor(worldBounds.maxX / gridCellSize);
       const minCellY = Math.floor(worldBounds.minY / gridCellSize);
