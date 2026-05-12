@@ -124,8 +124,8 @@ h1 {
 .card {
   /* place the card on a new transform layer and
   make sure it has hardward acceleration... we gun'need that! */
-  -webkit-transform: translate3d(0px, 0px, 0.01px);
-  transform: translate3d(0px, 0px, 0.01px);
+  -webkit-transform: translate3d(var(--translate-x), var(--translate-y), 0.01px);
+  transform: translate3d(var(--translate-x), var(--translate-y), 0.01px);
   -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
   pointer-events: none;
@@ -188,10 +188,8 @@ h1 {
   width: auto;
   position: relative;
 
-  -webkit-transform: translate3d(var(--translate-x), var(--translate-y), 0.1px)
-    scale(var(--card-scale));
-  transform: translate3d(var(--translate-x), var(--translate-y), 0.1px)
-    scale(var(--card-scale));
+  -webkit-transform: translate3d(0px, 0px, 0.1px) scale(var(--card-scale));
+  transform: translate3d(0px, 0px, 0.1px) scale(var(--card-scale));
 }
 
 .card__rotator {

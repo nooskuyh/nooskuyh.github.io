@@ -1,64 +1,126 @@
-var rotateX = 0;
+const card = document.querySelector(".card");
+const dragHandle = document.querySelector(".card__rotator");
 
-var mX, mY, distance;
-var toX = 0.0;
-var toY = 0.0;
-var mX = 0.0;
-var mY = 0.0;
-var card  = document.querySelector('.card');
+let pointerX = 0;
+let pointerY = 0;
+let smoothX = 0;
+let smoothY = 0;
+let translateX = readPixelVar("--translate-x");
+let translateY = readPixelVar("--translate-y");
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragStartTranslateX = 0;
+let dragStartTranslateY = 0;
 
-// Update the count down every 1 second
-setInterval(function() {
-
-    // card.style.setProperty('--rotate-x', rotateX +'deg');
-    // rotateX += .1
-    
-    // var bgX = Math.sin(rotateX/360)
-    // // console.log(bgX);
-    // card.style.setProperty('--background-x', bgX*100+"%");
-    
-}, 10);
-
-
-
-function calculateDistance(elem, mouseX, mouseY) {
-    return Math.floor(Math.sqrt(Math.pow(mouseX - (elem.offsetLeft+(elem.offsetWidth/2)), 2) + Math.pow(mouseY - (elem.offsetTop+(elem.offsetHeight/2)), 2)));
+function readPixelVar(name) {
+  const value = getComputedStyle(card).getPropertyValue(name);
+  return Number.parseFloat(value) || 0;
 }
 
-
-
-onmousemove = (e) => {
-    mX = e.pageX;
-    mY = e.pageY;
+function setTranslate(x, y) {
+  translateX = x;
+  translateY = y;
+  card.style.setProperty("--translate-x", `${translateX}px`);
+  card.style.setProperty("--translate-y", `${translateY}px`);
 }
-setInterval(function() {
 
-    toX = ( toX * 9.0 + mX )/10.0
-    toY = ( toY * 9.0 + mY )/10.0
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
-    //console.log(toX,toY, mX)
-    
-    var dist = calculateDistance(card, mX, mY)
+function getCardGeometry() {
+  const rect = card.getBoundingClientRect();
 
-    var distX = toX - (card.offsetLeft+(card.offsetWidth/2));
-    var distY = toY - (card.offsetTop+(card.offsetHeight/2));
+  return {
+    rect,
+    centerX: rect.left + rect.width / 2,
+    centerY: rect.top + rect.height / 2,
+  };
+}
 
-    distX /= 150;
-    distY /= 150;
+function updatePointer(clientX, clientY) {
+  pointerX = clientX;
+  pointerY = clientY;
+}
 
-    card.style.setProperty('--rotate-x', distX +'deg');
-    card.style.setProperty('--rotate-y', -distY +'deg');
-    
-    card.style.setProperty('--background-x', -distX*2 +'%');
-    card.style.setProperty('--background-y', distY*2 +'%');
+function startDrag(event) {
+  isDragging = true;
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  dragStartTranslateX = translateX;
+  dragStartTranslateY = translateY;
+  card.classList.add("active", "interacting");
+  dragHandle.setPointerCapture(event.pointerId);
+  updatePointer(event.clientX, event.clientY);
+  event.preventDefault();
+}
 
-    
-    card.style.setProperty('--pointer-x', (mX-card.offsetLeft)/card.offsetWidth*100 +'%');
-    card.style.setProperty('--pointer-y', (mY-card.offsetTop)/card.offsetHeight*100 +'%');
+function movePointer(event) {
+  updatePointer(event.clientX, event.clientY);
 
+  if (!isDragging) {
+    return;
+  }
 
-    card.style.setProperty('--pointer-from-center', 1-dist/1000);
-    card.style.setProperty('--card-opacity', 1-dist/1000);
+  setTranslate(
+    dragStartTranslateX + event.clientX - dragStartX,
+    dragStartTranslateY + event.clientY - dragStartY
+  );
+}
 
+function endDrag(event) {
+  if (!isDragging) {
+    return;
+  }
 
-}, 10);
+  isDragging = false;
+  card.classList.remove("active", "interacting");
+
+  if (dragHandle.hasPointerCapture(event.pointerId)) {
+    dragHandle.releasePointerCapture(event.pointerId);
+  }
+}
+
+function updateCard() {
+  smoothX = (smoothX * 9 + pointerX) / 10;
+  smoothY = (smoothY * 9 + pointerY) / 10;
+
+  const { rect, centerX, centerY } = getCardGeometry();
+  const distance = Math.hypot(pointerX - centerX, pointerY - centerY);
+  const distX = (smoothX - centerX) / 150;
+  const distY = (smoothY - centerY) / 150;
+  const pointerFromCenter = clamp(1 - distance / 1000, 0, 1);
+
+  card.style.setProperty("--rotate-x", `${distX}deg`);
+  card.style.setProperty("--rotate-y", `${-distY}deg`);
+  card.style.setProperty("--background-x", `${-distX * 2}%`);
+  card.style.setProperty("--background-y", `${distY * 2}%`);
+  card.style.setProperty(
+    "--pointer-x",
+    `${((pointerX - rect.left) / rect.width) * 100}%`
+  );
+  card.style.setProperty(
+    "--pointer-y",
+    `${((pointerY - rect.top) / rect.height) * 100}%`
+  );
+  card.style.setProperty("--pointer-from-center", pointerFromCenter);
+  card.style.setProperty("--card-opacity", pointerFromCenter);
+
+  requestAnimationFrame(updateCard);
+}
+
+const initialGeometry = getCardGeometry();
+updatePointer(initialGeometry.centerX, initialGeometry.centerY);
+smoothX = pointerX;
+smoothY = pointerY;
+setTranslate(translateX, translateY);
+
+window.addEventListener("pointermove", movePointer);
+dragHandle.addEventListener("pointerdown", startDrag);
+dragHandle.addEventListener("pointerup", endDrag);
+dragHandle.addEventListener("pointercancel", endDrag);
+dragHandle.addEventListener("lostpointercapture", endDrag);
+dragHandle.addEventListener("dragstart", (event) => event.preventDefault());
+
+requestAnimationFrame(updateCard);
