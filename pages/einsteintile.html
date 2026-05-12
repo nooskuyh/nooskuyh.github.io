@@ -1531,15 +1531,9 @@
       drawBackground(time);
 
       const tiles = prepareVisibleTiles(time);
-      const fieldRect = tileFieldRect();
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(fieldRect.left, fieldRect.top, fieldRect.right - fieldRect.left, fieldRect.bottom - fieldRect.top);
-      ctx.clip();
       for (const item of tiles) {
         drawTile(item);
       }
-      ctx.restore();
 
       drawAtmosphere(time);
 
