@@ -6,9 +6,14 @@
   <title>Aperiodic Monotile Field</title>
   <style>
     :root {
-      color-scheme: light;
-      --bg: #f1eee5;
-      --ink: #1d2521;
+      color-scheme: dark;
+      --bg: #050505;
+      --ink: #f7f2e4;
+      --panel: rgba(12, 12, 12, 0.72);
+      --panel-border: rgba(247, 242, 228, 0.22);
+      --button-bg: rgba(255, 255, 255, 0.1);
+      --button-hover: rgba(255, 255, 255, 0.18);
+      --active: #f3c742;
     }
 
     * {
@@ -23,10 +28,7 @@
       overflow: hidden;
       touch-action: none;
       user-select: none;
-      background:
-        linear-gradient(130deg, rgba(255, 255, 255, 0.72), transparent 48%),
-        linear-gradient(315deg, rgba(35, 42, 38, 0.1), transparent 55%),
-        var(--bg);
+      background: var(--bg);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -46,28 +48,55 @@
       top: 14px;
       right: 14px;
       display: flex;
+      flex-direction: column;
+      align-items: flex-end;
       gap: 8px;
       z-index: 2;
       pointer-events: none;
     }
 
+    .control-panel {
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(16px);
+      pointer-events: auto;
+    }
+
+    .theme-panel {
+      grid-template-columns: 42px;
+    }
+
+    .action-panel {
+      grid-template-columns: 42px;
+    }
+
     .hud button {
+      position: relative;
       width: 42px;
       height: 42px;
-      border: 1px solid rgba(29, 37, 33, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.78);
+      background: var(--button-bg);
       color: var(--ink);
-      box-shadow: 0 12px 28px rgba(29, 37, 33, 0.12);
       cursor: pointer;
-      pointer-events: auto;
       display: grid;
       place-items: center;
       padding: 0;
+      overflow: hidden;
     }
 
     .hud button:hover {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--button-hover);
+    }
+
+    .hud button[aria-pressed="true"] {
+      border-color: var(--active);
+      box-shadow: 0 0 0 2px rgba(142, 239, 255, 0.22), 0 0 22px rgba(142, 239, 255, 0.26);
     }
 
     .hud svg {
@@ -79,18 +108,94 @@
       stroke-linecap: round;
       stroke-linejoin: round;
     }
+
+    .theme-option::before {
+      position: absolute;
+      inset: 5px;
+      content: "";
+      border-radius: 6px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    }
+
+    .theme-option[data-theme="ocean"]::before {
+      background:
+        linear-gradient(90deg, #083d77 0 25%, #0b7285 25% 50%, #68b0ab 50% 75%, #f4f1de 75%);
+    }
+
+    .theme-option[data-theme="fire"]::before {
+      background:
+        linear-gradient(90deg, #2b0504 0 25%, #9d0208 25% 50%, #f48c06 50% 75%, #ffba08 75%);
+    }
+
+    .theme-option[data-theme="cosmic"]::before {
+      background:
+        radial-gradient(circle at 24% 22%, #ffffff 0 2px, transparent 3px),
+        radial-gradient(circle at 73% 68%, #bcf7ff 0 1px, transparent 2px),
+        linear-gradient(90deg, #282a36 0 25%, #6272a4 25% 50%, #bd93f9 50% 75%, #ff79c6 75%);
+    }
+
+    .theme-option[data-theme="hole"]::before {
+      background:
+        radial-gradient(circle at center, #050505 0 28%, transparent 30%),
+        linear-gradient(90deg, #f7f2e4 0 25%, #d64035 25% 50%, #2364aa 50% 75%, #f3c742 75%);
+    }
+
+    .spin-active svg {
+      animation: spinIcon 0.72s linear infinite;
+    }
+
+    @keyframes spinIcon {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
   <canvas id="stage" aria-label="Aperiodic monotile canvas"></canvas>
 
   <div class="hud">
-    <button id="reset" type="button" aria-label="Reset view">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 12a9 9 0 1 0 3-6.7"></path>
-        <path d="M3 4v6h6"></path>
-      </svg>
-    </button>
+    <div class="control-panel theme-panel" aria-label="Color themes">
+      <button class="theme-option" type="button" data-theme="hole" aria-label="Hole theme" aria-pressed="true" title="Hole">
+        <span class="sr-only">Hole</span>
+      </button>
+      <button class="theme-option" type="button" data-theme="ocean" aria-label="Ocean theme" aria-pressed="false" title="Ocean">
+        <span class="sr-only">Ocean</span>
+      </button>
+      <button class="theme-option" type="button" data-theme="fire" aria-label="Fire theme" aria-pressed="false" title="Fire">
+        <span class="sr-only">Fire</span>
+      </button>
+      <button class="theme-option" type="button" data-theme="cosmic" aria-label="COSMIC theme" aria-pressed="false" title="COSMIC">
+        <span class="sr-only">COSMIC</span>
+      </button>
+    </div>
+    <div class="control-panel action-panel">
+      <button id="drop" type="button" aria-label="Spinning tile hole mode" aria-pressed="false" title="Spin hole">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6h16"></path>
+          <path d="M12 10v9"></path>
+          <path d="m8 15 4 4 4-4"></path>
+        </svg>
+      </button>
+      <button id="reset" type="button" aria-label="Reset view" title="Reset">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+          <path d="M3 4v6h6"></path>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <script>
@@ -133,12 +238,67 @@
     const canvas = document.querySelector("#stage");
     const ctx = canvas.getContext("2d");
     const resetButton = document.querySelector("#reset");
+    const dropButton = document.querySelector("#drop");
+    const themeButtons = [...document.querySelectorAll("[data-theme]")];
 
     const sqrt3 = Math.sqrt(3);
     const halfSqrt3 = sqrt3 / 2;
     const pi = Math.PI;
     const ident = [1, 0, 0, 0, 1, 0];
     const sharedTileColor = { r: 142, g: 165, b: 156, css: "rgb(142, 165, 156)" };
+    const paletteWasmBase64 =
+      "AGFzbQEAAAABDgJgAn9/AX9gA39/fwF/AwQDAAEABQMBABAGGQN/AUGAgMAAC38AQYCAwAALfwBBgIDAAAsHTgYGbWVtb3J5AgAKY29sb3JfaGFzaAAADHBhbGV0dGVfc2xvdAABCnRvbmVfZGVsdGEAAgpfX2RhdGFfZW5kAwELX19oZWFwX2Jhc2UDAgrrAQNCACAAQbHz3fF5bCABQfeUr694bHNBvdzKlXxzIgFBEHYgAXNBreqs/wdsIgFBD3YgAXNBi82yo3hsIgFBEHYgAXMLTwACQCACDQBBAA8LIABBsfPd8XlsIAFB95Svr3hsc0G93MqVfHMiAUEQdiABc0Gt6qz/B2wiAUEPdiABc0GLzbKjeGwiAUEQdiABcyACcAtWACAAQbHz3fF5bEHv+N7FAmogAUH3lK+veGxBmZze2gFqc0G93MqVfHMiAUEQdiABc0Gt6qz/B2wiAUEPdiABc0GLzbKjeGwiAUEQdiABc0EZcEF0agsAWgRuYW1lABYVZWluc3RlaW5fcGFsZXR0ZS53YXNtAScDAApjb2xvcl9oYXNoAQxwYWxldHRlX3Nsb3QCCnRvbmVfZGVsdGEHEgEAD19fc3RhY2tfcG9pbnRlcgA9CXByb2R1Y2VycwEMcHJvY2Vzc2VkLWJ5AQVydXN0Yx0xLjg3LjAgKDE3MDY3ZTlhYyAyMDI1LTA1LTA5KQCUAQ90YXJnZXRfZmVhdHVyZXMIKwtidWxrLW1lbW9yeSsPYnVsay1tZW1vcnktb3B0KxZjYWxsLWluZGlyZWN0LW92ZXJsb25nKwptdWx0aXZhbHVlKw9tdXRhYmxlLWdsb2JhbHMrE25vbnRyYXBwaW5nLWZwdG9pbnQrD3JlZmVyZW5jZS10eXBlcysIc2lnbi1leHQ=";
+    const themes = {
+      hole: {
+        key: "hole",
+        bg: "#050505",
+        ink: "#f7f2e4",
+        panel: "rgba(12, 12, 12, 0.72)",
+        border: "rgba(247, 242, 228, 0.22)",
+        active: "#f3c742",
+        animated: false,
+        edge: "rgba(5, 5, 5, 0.3)",
+        shadow: "rgba(0, 0, 0, 0.7)",
+        palette: ["#f7f2e4", "#d64035", "#2364aa", "#f3c742", "#2a9d8f", "#111111"],
+      },
+      ocean: {
+        key: "ocean",
+        bg: "#061923",
+        ink: "#edf9f8",
+        panel: "rgba(5, 18, 25, 0.68)",
+        border: "rgba(179, 236, 255, 0.24)",
+        active: "#68b0ab",
+        animated: false,
+        edge: "rgba(239, 249, 248, 0.18)",
+        shadow: "rgba(0, 24, 36, 0.58)",
+        palette: ["#083d77", "#0b7285", "#2f7caa", "#68b0ab", "#f4f1de", "#1d3557"],
+      },
+      fire: {
+        key: "fire",
+        bg: "#190405",
+        ink: "#fff4dc",
+        panel: "rgba(31, 6, 4, 0.72)",
+        border: "rgba(255, 184, 91, 0.28)",
+        active: "#ffbd52",
+        animated: false,
+        edge: "rgba(255, 234, 197, 0.12)",
+        shadow: "rgba(18, 0, 0, 0.58)",
+        palette: ["#2b0504", "#6a040f", "#9d0208", "#dc2f02", "#f48c06", "#ffba08"],
+      },
+      cosmic: {
+        key: "cosmic",
+        bg: "#03040d",
+        ink: "#f7f4ff",
+        panel: "rgba(8, 7, 23, 0.72)",
+        border: "rgba(203, 188, 255, 0.27)",
+        active: "#d8c7ff",
+        animated: true,
+        edge: "rgba(247, 244, 255, 0.14)",
+        shadow: "rgba(0, 0, 16, 0.68)",
+        palette: ["#282a36", "#44475a", "#6272a4", "#8be9fd", "#bd93f9", "#ff79c6", "#f1fa8c"],
+      },
+    };
+    const starField = createStarField(180);
 
     let dpr = 1;
     let width = 0;
@@ -156,6 +316,12 @@
     let bounds = null;
     let spatialIndex = new Map();
     let gridCellSize = 12;
+    let currentTheme = themes.hole;
+    let wasmPalette = null;
+    let spinEnabled = false;
+    let dropEnabled = false;
+    let spinAngle = 0;
+    let lastFrameTime = 0;
 
     function pt(x, y) {
       return { x, y };
@@ -293,16 +459,139 @@
       }
     }
 
-    function mixColor(a, b, t) {
+    function colorString(color, alpha) {
+      return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+    }
+
+    function clampColor(value) {
+      return Math.max(0, Math.min(255, Math.round(value)));
+    }
+
+    function hexToColor(hex) {
+      const value = Number.parseInt(hex.slice(1), 16);
       return {
-        r: Math.round(a.r + (b.r - a.r) * t),
-        g: Math.round(a.g + (b.g - a.g) * t),
-        b: Math.round(a.b + (b.b - a.b) * t),
+        r: value >> 16 & 255,
+        g: value >> 8 & 255,
+        b: value & 255,
       };
     }
 
-    function colorString(color, alpha) {
-      return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+    function shiftColor(color, amount) {
+      return {
+        r: clampColor(color.r + amount),
+        g: clampColor(color.g + amount),
+        b: clampColor(color.b + amount),
+      };
+    }
+
+    function scaleColor(color, factor) {
+      return {
+        r: clampColor(color.r * factor),
+        g: clampColor(color.g * factor),
+        b: clampColor(color.b * factor),
+      };
+    }
+
+    function fract(value) {
+      return value - Math.floor(value);
+    }
+
+    function seededNoise(a, b) {
+      return fract(Math.sin(a * 12.9898 + b * 78.233) * 43758.5453);
+    }
+
+    function createStarField(count) {
+      const stars = [];
+      for (let i = 0; i < count; i += 1) {
+        const x = seededNoise(i + 0.3, 11.7);
+        const y = seededNoise(i + 2.1, 31.4);
+        stars.push({
+          x,
+          y,
+          size: 0.65 + seededNoise(i + 9.2, 5.6) * 2.1,
+          phase: seededNoise(i + 4.8, 91.1) * pi * 2,
+          speed: 0.7 + seededNoise(i + 7.4, 42.5) * 1.8,
+        });
+      }
+      return stars;
+    }
+
+    function fallbackHash(a, b) {
+      let x = Math.imul(a, 0x9e3779b1) >>> 0;
+      x = (x ^ Math.imul(b, 0x85ebca77)) >>> 0;
+      x = (x ^ 0xc2b2ae3d) >>> 0;
+      x = (x ^ x >>> 16) >>> 0;
+      x = Math.imul(x, 0x7feb352d) >>> 0;
+      x = (x ^ x >>> 15) >>> 0;
+      x = Math.imul(x, 0x846ca68b) >>> 0;
+      return (x ^ x >>> 16) >>> 0;
+    }
+
+    function paletteSlot(a, b, length) {
+      if (wasmPalette) {
+        return wasmPalette.palette_slot(a, b, length) >>> 0;
+      }
+      return fallbackHash(a, b) % length;
+    }
+
+    function toneDelta(a, b) {
+      if (wasmPalette) {
+        return wasmPalette.tone_delta(a, b);
+      }
+      return fallbackHash(a + 31, b - 17) % 25 - 12;
+    }
+
+    async function initPaletteWasm() {
+      if (!("WebAssembly" in window)) {
+        return;
+      }
+
+      try {
+        const bytes = Uint8Array.from(atob(paletteWasmBase64), (char) => char.charCodeAt(0));
+        const { instance } = await WebAssembly.instantiate(bytes);
+        wasmPalette = instance.exports;
+        assignTileStyles();
+        queueRender();
+      } catch (error) {
+        console.warn("Palette wasm failed to initialize; using JS fallback.", error);
+      }
+    }
+
+    function assignTileStyles() {
+      if (!leaves.length) {
+        return;
+      }
+
+      const palette = currentTheme.palette.map(hexToColor);
+      for (const tile of leaves) {
+        const slot = paletteSlot(tile.hashX, tile.hashY, palette.length);
+        const delta = toneDelta(tile.hashX, tile.hashY);
+        tile.fill = shiftColor(palette[slot], delta);
+      }
+    }
+
+    function applyTheme(themeName) {
+      currentTheme = themes[themeName] || themes.hole;
+      document.documentElement.style.setProperty("--bg", currentTheme.bg);
+      document.documentElement.style.setProperty("--ink", currentTheme.ink);
+      document.documentElement.style.setProperty("--panel", currentTheme.panel);
+      document.documentElement.style.setProperty("--panel-border", currentTheme.border);
+      document.documentElement.style.setProperty("--active", currentTheme.active);
+
+      for (const button of themeButtons) {
+        button.setAttribute("aria-pressed", String(button.dataset.theme === currentTheme.key));
+      }
+
+      assignTileStyles();
+      queueRender();
+    }
+
+    function setDropMode(enabled) {
+      dropEnabled = enabled;
+      spinEnabled = enabled;
+      dropButton.setAttribute("aria-pressed", String(dropEnabled));
+      dropButton.classList.toggle("spin-active", dropEnabled);
+      queueRender();
     }
 
     function createInitialTiles() {
@@ -491,6 +780,9 @@
     function computeBounds(tileList) {
       const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
       for (const tile of tileList) {
+        tile.seed = seededNoise(tile.T[2], tile.T[5]);
+        tile.hashX = Math.round(tile.T[2] * 1000);
+        tile.hashY = Math.round(tile.T[5] * 1000);
         tile.bounds = computeTileBounds(tile);
         b.minX = Math.min(b.minX, tile.bounds.minX);
         b.maxX = Math.max(b.maxX, tile.bounds.maxX);
@@ -529,6 +821,7 @@
     function rebuildPatch() {
       leaves = buildTiles(6);
       bounds = computeBounds(leaves);
+      assignTileStyles();
       buildSpatialIndex(leaves);
       resetView();
     }
@@ -541,7 +834,7 @@
     }
 
     function resize() {
-      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      dpr = Math.max(1, Math.min(1.5, window.devicePixelRatio || 1));
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = Math.round(width * dpr);
@@ -555,9 +848,22 @@
     }
 
     function worldToScreen(p) {
+      const x = p.x * scale + panX;
+      const y = -p.y * scale + panY;
+
+      if (!hasSpinTransform()) {
+        return { x, y };
+      }
+
+      const cx = width * 0.5;
+      const cy = height * 0.5;
+      const dx = x - cx;
+      const dy = y - cy;
+      const c = Math.cos(spinAngle);
+      const s = Math.sin(spinAngle);
       return {
-        x: p.x * scale + panX,
-        y: -p.y * scale + panY,
+        x: cx + dx * c - dy * s,
+        y: cy + dx * s + dy * c,
       };
     }
 
@@ -568,17 +874,23 @@
       };
     }
 
+    function hasSpinTransform() {
+      return Math.abs(spinAngle) > 0.0001;
+    }
+
     function isVisible(tile) {
-      const margin = 4 / scale;
-      const viewMin = screenToWorld(-80, height + 80);
-      const viewMax = screenToWorld(width + 80, -80);
+      const screenMargin = hasSpinTransform() ? Math.hypot(width, height) * 0.42 : 80;
+      const margin = screenMargin / scale;
+      const viewMin = screenToWorld(-screenMargin, height + screenMargin);
+      const viewMax = screenToWorld(width + screenMargin, -screenMargin);
       const b = tile.bounds;
       return b.maxX >= viewMin.x - margin && b.minX <= viewMax.x + margin && b.maxY >= viewMin.y - margin && b.minY <= viewMax.y + margin;
     }
 
     function visibleTiles() {
-      const viewMin = screenToWorld(-100, height + 100);
-      const viewMax = screenToWorld(width + 100, -100);
+      const screenMargin = hasSpinTransform() ? Math.hypot(width, height) * 0.42 : 100;
+      const viewMin = screenToWorld(-screenMargin, height + screenMargin);
+      const viewMax = screenToWorld(width + screenMargin, -screenMargin);
       const minCellX = Math.floor(viewMin.x / gridCellSize);
       const maxCellX = Math.floor(viewMax.x / gridCellSize);
       const minCellY = Math.floor(viewMin.y / gridCellSize);
@@ -618,12 +930,119 @@
       ctx.closePath();
     }
 
+    function drawBackground(time) {
+      ctx.fillStyle = currentTheme.bg;
+      ctx.fillRect(0, 0, width, height);
+
+      if (currentTheme.key === "hole") {
+        return;
+      }
+
+      if (currentTheme.key === "ocean") {
+        const glow = ctx.createRadialGradient(width * 0.64, height * 0.2, 0, width * 0.64, height * 0.2, Math.max(width, height) * 0.76);
+        glow.addColorStop(0, "rgba(137, 255, 237, 0.24)");
+        glow.addColorStop(0.42, "rgba(23, 160, 191, 0.12)");
+        glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, width, height);
+        return;
+      }
+
+      if (currentTheme.key === "fire") {
+        const ember = ctx.createRadialGradient(width * 0.48, height * 0.98, 0, width * 0.48, height * 0.98, Math.max(width, height) * 0.72);
+        ember.addColorStop(0, "rgba(255, 111, 24, 0.42)");
+        ember.addColorStop(0.36, "rgba(175, 35, 7, 0.2)");
+        ember.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = ember;
+        ctx.fillRect(0, 0, width, height);
+        return;
+      }
+
+      drawStars(time, 0.92);
+      const nebula = ctx.createRadialGradient(width * 0.3, height * 0.26, 0, width * 0.3, height * 0.26, Math.max(width, height) * 0.58);
+      nebula.addColorStop(0, "rgba(136, 72, 255, 0.24)");
+      nebula.addColorStop(0.42, "rgba(33, 139, 255, 0.08)");
+      nebula.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = nebula;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function drawStars(time, alpha) {
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      for (const star of starField) {
+        const x = star.x * width;
+        const y = star.y * height;
+        const pulse = 0.45 + Math.sin(time * 0.001 * star.speed + star.phase) * 0.35;
+        const opacity = Math.max(0.14, pulse) * alpha;
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.beginPath();
+        ctx.arc(x, y, star.size, 0, pi * 2);
+        ctx.fill();
+
+        if (star.size > 1.8 && opacity > 0.42) {
+          ctx.strokeStyle = `rgba(174, 239, 255, ${opacity * 0.35})`;
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(x - star.size * 4, y);
+          ctx.lineTo(x + star.size * 4, y);
+          ctx.moveTo(x, y - star.size * 4);
+          ctx.lineTo(x, y + star.size * 4);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawOceanAtmosphere(time) {
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.lineCap = "round";
+      for (let i = 0; i < 9; i += 1) {
+        const y = height * (0.16 + i * 0.095) + Math.sin(time * 0.00045 + i) * 16;
+        const drift = Math.sin(time * 0.0003 + i * 1.7) * 48;
+        const grad = ctx.createLinearGradient(0, y, width, y + 44);
+        grad.addColorStop(0, "rgba(98, 226, 244, 0)");
+        grad.addColorStop(0.48, "rgba(170, 255, 238, 0.08)");
+        grad.addColorStop(1, "rgba(98, 226, 244, 0)");
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.4 + i * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(-80, y);
+        ctx.bezierCurveTo(width * 0.28 + drift, y - 28, width * 0.66 - drift, y + 42, width + 80, y + 8);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawCosmicAtmosphere(time) {
+      drawStars(time, 0.46);
+    }
+
+    function drawAtmosphere(time) {
+      if (currentTheme.key === "ocean") {
+        drawOceanAtmosphere(time);
+      } else if (currentTheme.key === "cosmic") {
+        drawCosmicAtmosphere(time);
+      }
+    }
+
+    function prepareVisibleTiles() {
+      return visibleTiles().map((tile) => {
+        const points = screenPolygon(tile);
+        return {
+          tile,
+          points,
+        };
+      });
+    }
+
     function polygonCentroid(points) {
       let x = 0;
       let y = 0;
-      for (const p of points) {
-        x += p.x;
-        y += p.y;
+      for (const point of points) {
+        x += point.x;
+        y += point.y;
       }
       return pt(x / points.length, y / points.length);
     }
@@ -641,7 +1060,6 @@
 
     function verticalBoundaryHit(points, origin, skipEdgeA, skipEdgeB) {
       const x = origin.x;
-      const y = origin.y;
       const eps = 0.35;
       let best = null;
       let bestY = Infinity;
@@ -654,32 +1072,32 @@
 
         const a = points[i];
         const b = points[next];
-        const dx = b.x - a.x;
+        const minX = Math.min(a.x, b.x);
+        const maxX = Math.max(a.x, b.x);
 
+        if (x < minX - eps || x > maxX + eps) {
+          continue;
+        }
+
+        let hitY = null;
+        const dx = b.x - a.x;
         if (Math.abs(dx) < eps) {
           if (Math.abs(x - a.x) > eps) {
             continue;
           }
-          const lowerY = Math.max(a.y, b.y);
-          const upperY = Math.min(a.y, b.y);
-          if (lowerY > y + eps && upperY <= lowerY) {
-            const hitY = Math.max(y + eps, upperY);
-            if (hitY > y + eps && hitY < bestY) {
-              bestY = hitY;
-              best = pt(x, hitY);
-            }
+          const below = [a.y, b.y].filter((value) => value > origin.y + eps);
+          if (below.length) {
+            hitY = Math.min(...below);
           }
-          continue;
+        } else {
+          const t = (x - a.x) / dx;
+          if (t < -0.001 || t > 1.001) {
+            continue;
+          }
+          hitY = a.y + t * (b.y - a.y);
         }
 
-        let t = (x - a.x) / dx;
-        if (t < -0.001 || t > 1.001) {
-          continue;
-        }
-        t = Math.min(1, Math.max(0, t));
-
-        const hitY = a.y + t * (b.y - a.y);
-        if (hitY > y + eps && hitY < bestY) {
+        if (hitY !== null && hitY > origin.y + eps && hitY < bestY) {
           bestY = hitY;
           best = pt(x, hitY);
         }
@@ -688,96 +1106,131 @@
       return best;
     }
 
-    function drawDepthLines(points, color) {
+    function pointInPolygon(point, points) {
+      let inside = false;
+      for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+        const a = points[i];
+        const b = points[j];
+        const crosses = (a.y > point.y) !== (b.y > point.y);
+        if (crosses) {
+          const x = (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x;
+          if (point.x < x) {
+            inside = !inside;
+          }
+        }
+      }
+      return inside;
+    }
+
+    function drawHoleShade(points, color) {
       ctx.save();
       beginPolygon(points);
       ctx.clip();
-      ctx.lineCap = "round";
-      const centre = polygonCentroid(points);
-      const inset = Math.max(1.6, scale * 0.045);
-      const highlight = mixColor(color, { r: 118, g: 122, b: 118 }, 0.38);
-      const midtone = mixColor(color, { r: 62, g: 69, b: 70 }, 0.58);
-      const shadow = mixColor(color, { r: 18, g: 21, b: 24 }, 0.78);
+      const bandDepth = Math.max(7, Math.min(20, scale * 0.28));
+      const dark = scaleColor(color, 0.33);
 
       for (let i = 0; i < points.length; i += 1) {
-        const start = insetPoint(points[i], centre, inset);
-        const prevEdge = (i - 1 + points.length) % points.length;
-        const hit = verticalBoundaryHit(points, start, i, prevEdge);
-        if (!hit) {
+        const next = (i + 1) % points.length;
+        const a = points[i];
+        const b = points[next];
+        const sample = pt((a.x + b.x) * 0.5, (a.y + b.y) * 0.5 + bandDepth * 0.55);
+        if (!pointInPolygon(sample, points)) {
           continue;
         }
 
-        if (hit.y - start.y < 5) {
-          continue;
-        }
-
-        ctx.lineWidth = Math.max(1.2, scale * 0.034);
-        ctx.strokeStyle = colorString(shadow, 0.38);
         ctx.beginPath();
-        ctx.moveTo(start.x, start.y + 1);
-        ctx.lineTo(hit.x, hit.y - 1);
-        ctx.stroke();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.lineTo(b.x, b.y + bandDepth);
+        ctx.lineTo(a.x, a.y + bandDepth);
+        ctx.closePath();
+        ctx.fillStyle = colorString(dark, 0.34);
+        ctx.fill();
 
-        const grad = ctx.createLinearGradient(start.x, start.y, hit.x, hit.y);
-        grad.addColorStop(0, colorString(highlight, 0.58));
-        grad.addColorStop(0.3, colorString(midtone, 0.5));
-        grad.addColorStop(0.78, colorString(shadow, 0.3));
-        grad.addColorStop(1, colorString(shadow, 0.08));
-
-        ctx.lineWidth = Math.max(0.75, scale * 0.014);
-        ctx.strokeStyle = grad;
+        ctx.strokeStyle = colorString(scaleColor(color, 0.22), 0.32);
+        ctx.lineWidth = Math.max(0.55, scale * 0.01);
         ctx.beginPath();
-        ctx.moveTo(start.x, start.y + 1.2);
-        ctx.lineTo(hit.x, hit.y - 1.2);
+        ctx.moveTo(a.x, a.y + bandDepth);
+        ctx.lineTo(b.x, b.y + bandDepth);
         ctx.stroke();
       }
 
       ctx.restore();
     }
 
-    function drawTile(tile) {
-      const points = screenPolygon(tile);
-      const minY = Math.min(...points.map((p) => p.y));
-      const maxY = Math.max(...points.map((p) => p.y));
-      const minX = Math.min(...points.map((p) => p.x));
-      const maxX = Math.max(...points.map((p) => p.x));
-      const color = tile.color;
-
+    function drawHoleLines(points, color) {
+      ctx.save();
       beginPolygon(points);
-      const depth = ctx.createLinearGradient(0, minY, 0, maxY);
-      depth.addColorStop(0, `rgba(${Math.round(color.r * 0.7)}, ${Math.round(color.g * 0.7)}, ${Math.round(color.b * 0.7)}, 0.98)`);
-      depth.addColorStop(0.28, `rgba(${Math.round(color.r * 0.48)}, ${Math.round(color.g * 0.48)}, ${Math.round(color.b * 0.48)}, 0.98)`);
-      depth.addColorStop(0.76, "rgba(32, 36, 39, 0.99)");
-      depth.addColorStop(1, "rgb(12, 14, 18)");
-      ctx.fillStyle = depth;
-      ctx.fill();
+      ctx.clip();
+      ctx.lineCap = "round";
+      const centre = polygonCentroid(points);
+      const inset = Math.max(1.2, scale * 0.034);
 
-      const glow = ctx.createRadialGradient(
-        (minX + maxX) * 0.5,
-        minY + (maxY - minY) * 0.2,
-        1,
-        (minX + maxX) * 0.5,
-        minY + (maxY - minY) * 0.25,
-        Math.max(maxX - minX, maxY - minY) * 0.68,
-      );
-      glow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.24)`);
-      glow.addColorStop(0.42, "rgba(255, 255, 255, 0.035)");
-      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-      beginPolygon(points);
-      ctx.fillStyle = glow;
-      ctx.fill();
+      for (let i = 0; i < points.length; i += 1) {
+        const start = insetPoint(points[i], centre, inset);
+        const prevEdge = (i - 1 + points.length) % points.length;
+        const hit = verticalBoundaryHit(points, start, i, prevEdge);
+        if (!hit || hit.y - start.y < 4) {
+          continue;
+        }
 
-      drawDepthLines(points, color);
+        ctx.lineWidth = Math.max(1.1, scale * 0.03);
+        ctx.strokeStyle = colorString(scaleColor(color, 0.24), 0.44);
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(hit.x, hit.y);
+        ctx.stroke();
+
+        ctx.lineWidth = Math.max(0.65, scale * 0.011);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.13)";
+        ctx.beginPath();
+        ctx.moveTo(start.x + 0.7, start.y + 0.6);
+        ctx.lineTo(hit.x + 0.7, hit.y - 0.6);
+        ctx.stroke();
+      }
+
+      ctx.restore();
     }
 
-    function draw() {
-      renderQueued = false;
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "#f1eee5";
-      ctx.fillRect(0, 0, width, height);
+    function drawTile(tile, points) {
+      const fill = tile.fill || hexToColor(currentTheme.palette[0]);
 
-      for (const tile of visibleTiles()) {
-        drawTile(tile);
+      beginPolygon(points);
+      ctx.fillStyle = colorString(fill, 1);
+      ctx.fill();
+
+      if (dropEnabled) {
+        drawHoleShade(points, fill);
+        drawHoleLines(points, fill);
+      }
+
+      beginPolygon(points);
+      ctx.strokeStyle = currentTheme.edge;
+      ctx.lineWidth = Math.max(0.45, scale * 0.008);
+      ctx.stroke();
+    }
+
+    function draw(time = performance.now()) {
+      renderQueued = false;
+      const delta = lastFrameTime ? Math.min(42, time - lastFrameTime) : 16;
+      lastFrameTime = time;
+
+      if (spinEnabled) {
+        spinAngle += delta * 0.00145;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      drawBackground(time);
+
+      const tiles = prepareVisibleTiles();
+      for (const item of tiles) {
+        drawTile(item.tile, item.points);
+      }
+
+      drawAtmosphere(time);
+
+      if (spinEnabled || currentTheme.animated) {
+        queueRender();
       }
     }
 
@@ -828,6 +1281,16 @@
     canvas.addEventListener("pointerup", endDrag);
     canvas.addEventListener("pointercancel", endDrag);
 
+    for (const button of themeButtons) {
+      button.addEventListener("click", () => {
+        applyTheme(button.dataset.theme);
+      });
+    }
+
+    dropButton.addEventListener("click", () => {
+      setDropMode(!dropEnabled);
+    });
+
     resetButton.addEventListener("click", () => {
       resetView();
     });
@@ -836,6 +1299,7 @@
 
     resize();
     rebuildPatch();
+    initPaletteWasm();
   </script>
 </body>
 </html>
