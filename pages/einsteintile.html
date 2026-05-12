@@ -322,6 +322,8 @@
     let startPanY = 0;
     let activePointerId = null;
     let renderQueued = false;
+    let drawInProgress = false;
+    let needsRender = false;
     let leaves = [];
     let bounds = null;
     let spatialIndex = new Map();
@@ -338,6 +340,8 @@
     let lastFrameTime = 0;
     let cachedLocalHoleGeometry = null;
     let tileMotion = new Map();
+    let tileWorkerPool = null;
+    let tileWorkerJobId = 0;
 
     function pt(x, y) {
       return { x, y };
@@ -575,6 +579,236 @@
       } catch (error) {
         console.warn("Geometry wasm failed to initialize; using JS fallback.", error);
       }
+    }
+
+    function tileWorkerScript() {
+      return `
+        function pt(x, y) {
+          return { x, y };
+        }
+
+        function worldToScreen(point, state) {
+          let x = point.x * state.scale + state.panX;
+          let y = -point.y * state.scale + state.panY;
+
+          if (!state.doSpin) {
+            return { x, y };
+          }
+
+          const cx = state.width * 0.5;
+          const cy = state.height * 0.5;
+          const dx = x - cx;
+          const dy = y - cy;
+          return {
+            x: cx + dx * state.spinCos - dy * state.spinSin,
+            y: cy + dx * state.spinSin + dy * state.spinCos,
+          };
+        }
+
+        function pointInPolygon(point, points) {
+          let inside = false;
+          for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+            const a = points[i];
+            const b = points[j];
+            const crosses = (a.y > point.y) !== (b.y > point.y);
+            if (crosses) {
+              const x = (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x;
+              if (point.x < x) {
+                inside = !inside;
+              }
+            }
+          }
+          return inside;
+        }
+
+        function verticalBoundaryHit(points, origin, skipEdgeA, skipEdgeB) {
+          const x = origin.x;
+          const eps = 0.35;
+          let best = null;
+          let bestY = Infinity;
+
+          for (let i = 0; i < points.length; i += 1) {
+            const next = (i + 1) % points.length;
+            if (i === skipEdgeA || i === skipEdgeB) {
+              continue;
+            }
+
+            const a = points[i];
+            const b = points[next];
+            const minX = Math.min(a.x, b.x);
+            const maxX = Math.max(a.x, b.x);
+
+            if (x < minX - eps || x > maxX + eps) {
+              continue;
+            }
+
+            let hitY = null;
+            const dx = b.x - a.x;
+            if (Math.abs(dx) < eps) {
+              if (Math.abs(x - a.x) > eps) {
+                continue;
+              }
+              const below = [a.y, b.y].filter((value) => value > origin.y + eps);
+              if (below.length) {
+                hitY = Math.min(...below);
+              }
+            } else {
+              const t = (x - a.x) / dx;
+              if (t < -0.001 || t > 1.001) {
+                continue;
+              }
+              hitY = a.y + t * (b.y - a.y);
+            }
+
+            if (hitY !== null && hitY > origin.y + eps && hitY < bestY) {
+              bestY = hitY;
+              best = pt(x, hitY);
+            }
+          }
+
+          return best;
+        }
+
+        function buildShadeBands(points, depth) {
+          const bands = [];
+          for (let i = 0; i < points.length; i += 1) {
+            const next = (i + 1) % points.length;
+            const a = points[i];
+            const b = points[next];
+            const sample = pt((a.x + b.x) * 0.5, (a.y + b.y) * 0.5 + depth * 0.55);
+            if (pointInPolygon(sample, points)) {
+              bands.push({ a, b, depth });
+            }
+          }
+          return bands;
+        }
+
+        function buildHoleLines(points, holeStarts, minLineDepth) {
+          const lines = [];
+          for (const startInfo of holeStarts) {
+            const hit = verticalBoundaryHit(points, startInfo.point, startInfo.skipEdgeA, startInfo.skipEdgeB);
+            if (hit && hit.y - startInfo.point.y >= minLineDepth) {
+              lines.push({ from: startInfo.point, to: hit });
+            }
+          }
+          return lines;
+        }
+
+        self.onmessage = (event) => {
+          const { jobId, chunk, state } = event.data;
+          const items = [];
+
+          for (const tile of chunk) {
+            const points = tile.outline.map((point) => worldToScreen(point, state));
+            const item = {
+              key: tile.key,
+              points,
+              holeStarts: [],
+              shadeBands: [],
+              holeLines: [],
+            };
+
+            if (state.dropEnabled) {
+              item.holeStarts = tile.holeStarts.map((start) => ({
+                point: worldToScreen(start.point, state),
+                skipEdgeA: start.skipEdgeA,
+                skipEdgeB: start.skipEdgeB,
+              }));
+              item.shadeBands = buildShadeBands(points, state.bandDepth);
+              item.holeLines = buildHoleLines(points, item.holeStarts, state.holeMinLineDepth);
+            }
+
+            items.push(item);
+          }
+
+          self.postMessage({ jobId, items });
+        };
+      `;
+    }
+
+    function createTileWorkerPool() {
+      if (!("Worker" in window) || !("Blob" in window) || !("URL" in window)) {
+        return null;
+      }
+
+      const count = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
+      const blob = new Blob([tileWorkerScript()], { type: "text/javascript" });
+      const url = URL.createObjectURL(blob);
+      const workers = Array.from({ length: count }, () => new Worker(url));
+      return { workers, url };
+    }
+
+    function tileWorkerState() {
+      return {
+        width,
+        height,
+        scale,
+        panX,
+        panY,
+        spinCos: Math.cos(spinAngle),
+        spinSin: Math.sin(spinAngle),
+        doSpin: hasSpinTransform(),
+        dropEnabled,
+        bandDepth: Math.max(7, Math.min(20, scale * 0.28)),
+        holeMinLineDepth,
+      };
+    }
+
+    function tileWorkerPayload(tile) {
+      const geometry = tile.geometry || buildTileGeometry(tile);
+      return {
+        key: tile.motionKey,
+        outline: geometry.outline,
+        holeStarts: dropEnabled ? geometry.holeStarts : [],
+      };
+    }
+
+    function processTilesWithWorkers(tiles) {
+      if (!tileWorkerPool) {
+        tileWorkerPool = createTileWorkerPool();
+      }
+
+      if (!tileWorkerPool || !tileWorkerPool.workers.length || !tiles.length) {
+        return Promise.resolve(null);
+      }
+
+      const workers = tileWorkerPool.workers;
+      const state = tileWorkerState();
+      const payload = tiles.map(tileWorkerPayload);
+      const chunkSize = Math.ceil(payload.length / workers.length);
+      const jobs = [];
+
+      for (let i = 0; i < workers.length; i += 1) {
+        const chunk = payload.slice(i * chunkSize, (i + 1) * chunkSize);
+        if (!chunk.length) {
+          continue;
+        }
+
+        const worker = workers[i];
+        const jobId = ++tileWorkerJobId;
+        jobs.push(new Promise((resolve, reject) => {
+          const cleanup = () => {
+            worker.removeEventListener("message", handleMessage);
+            worker.removeEventListener("error", handleError);
+          };
+          const handleMessage = (event) => {
+            if (event.data.jobId !== jobId) {
+              return;
+            }
+            cleanup();
+            resolve(event.data.items);
+          };
+          const handleError = (error) => {
+            cleanup();
+            reject(error);
+          };
+          worker.addEventListener("message", handleMessage);
+          worker.addEventListener("error", handleError);
+          worker.postMessage({ jobId, chunk, state });
+        }));
+      }
+
+      return Promise.all(jobs).then((chunks) => chunks.flat());
     }
 
     function assignTileStyles() {
@@ -1055,6 +1289,15 @@
           ...start,
           point: pt(start.point.x + offsetX, start.point.y + offsetY),
         })),
+        shadeBands: item.shadeBands?.map((band) => ({
+          ...band,
+          a: pt(band.a.x + offsetX, band.a.y + offsetY),
+          b: pt(band.b.x + offsetX, band.b.y + offsetY),
+        })) || [],
+        holeLines: item.holeLines?.map((line) => ({
+          from: pt(line.from.x + offsetX, line.from.y + offsetY),
+          to: pt(line.to.x + offsetX, line.to.y + offsetY),
+        })) || [],
         opacity: 0.18 + eased * 0.82,
       };
     }
@@ -1240,8 +1483,7 @@
       }
     }
 
-    function prepareVisibleTiles(time) {
-      const tiles = visibleTiles();
+    function prepareVisibleTilesSync(time, tiles = visibleTiles()) {
       const vertexCount = hatOutline.length;
       const pointsPerTile = dropEnabled
         ? vertexCount + getLocalHoleGeometry().holeStarts.length
@@ -1315,6 +1557,8 @@
             tile: item.tile,
             points,
             holeStarts,
+            shadeBands: [],
+            holeLines: [],
           };
         });
 
@@ -1331,10 +1575,39 @@
             skipEdgeA: start.skipEdgeA,
             skipEdgeB: start.skipEdgeB,
           })) : [],
+          shadeBands: [],
+          holeLines: [],
         };
       });
 
       return animatePreparedTiles(prepared, time);
+    }
+
+    async function prepareVisibleTiles(time) {
+      const tiles = visibleTiles();
+
+      if (dropEnabled) {
+        try {
+          const workerItems = await processTilesWithWorkers(tiles);
+          if (workerItems) {
+            const tileByKey = new Map(tiles.map((tile) => [tile.motionKey, tile]));
+            const prepared = workerItems
+              .map((item) => ({
+                tile: tileByKey.get(item.key),
+                points: item.points,
+                holeStarts: item.holeStarts,
+                shadeBands: item.shadeBands,
+                holeLines: item.holeLines,
+              }))
+              .filter((item) => item.tile);
+            return animatePreparedTiles(prepared, time);
+          }
+        } catch (error) {
+          console.warn("Tile workers failed; using main-thread fallback.", error);
+        }
+      }
+
+      return prepareVisibleTilesSync(time, tiles);
     }
 
     function polygonCentroid(points) {
@@ -1443,75 +1716,123 @@
       return cachedLocalHoleGeometry;
     }
 
-    function drawHoleShade(points, color) {
+    function drawHoleShade(points, color, shadeBands = null) {
       ctx.save();
       beginPolygon(points);
       ctx.clip();
       const bandDepth = Math.max(7, Math.min(20, scale * 0.28));
       const dark = scaleColor(color, 0.33);
+      const bands = shadeBands && shadeBands.length
+        ? shadeBands
+        : null;
 
-      for (let i = 0; i < points.length; i += 1) {
-        const next = (i + 1) % points.length;
-        const a = points[i];
-        const b = points[next];
-        const sample = pt((a.x + b.x) * 0.5, (a.y + b.y) * 0.5 + bandDepth * 0.55);
-        if (!pointInPolygon(sample, points)) {
-          continue;
+      if (bands) {
+        for (const band of bands) {
+          const a = band.a;
+          const b = band.b;
+          const depth = band.depth ?? bandDepth;
+
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.lineTo(b.x, b.y + depth);
+          ctx.lineTo(a.x, a.y + depth);
+          ctx.closePath();
+          ctx.fillStyle = colorString(dark, 0.34);
+          ctx.fill();
+
+          ctx.strokeStyle = colorString(scaleColor(color, 0.22), 0.32);
+          ctx.lineWidth = Math.max(0.55, scale * 0.01);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y + depth);
+          ctx.lineTo(b.x, b.y + depth);
+          ctx.stroke();
         }
+      } else {
+        for (let i = 0; i < points.length; i += 1) {
+          const next = (i + 1) % points.length;
+          const a = points[i];
+          const b = points[next];
+          const sample = pt((a.x + b.x) * 0.5, (a.y + b.y) * 0.5 + bandDepth * 0.55);
+          if (!pointInPolygon(sample, points)) {
+            continue;
+          }
 
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.lineTo(b.x, b.y + bandDepth);
-        ctx.lineTo(a.x, a.y + bandDepth);
-        ctx.closePath();
-        ctx.fillStyle = colorString(dark, 0.34);
-        ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.lineTo(b.x, b.y + bandDepth);
+          ctx.lineTo(a.x, a.y + bandDepth);
+          ctx.closePath();
+          ctx.fillStyle = colorString(dark, 0.34);
+          ctx.fill();
 
-        ctx.strokeStyle = colorString(scaleColor(color, 0.22), 0.32);
-        ctx.lineWidth = Math.max(0.55, scale * 0.01);
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y + bandDepth);
-        ctx.lineTo(b.x, b.y + bandDepth);
-        ctx.stroke();
+          ctx.strokeStyle = colorString(scaleColor(color, 0.22), 0.32);
+          ctx.lineWidth = Math.max(0.55, scale * 0.01);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y + bandDepth);
+          ctx.lineTo(b.x, b.y + bandDepth);
+          ctx.stroke();
+        }
       }
 
       ctx.restore();
     }
 
-    function drawHoleLines(points, holeStarts, color) {
+    function drawHoleLines(points, holeStarts, color, holeLines = null) {
       ctx.save();
       beginPolygon(points);
       ctx.clip();
       ctx.lineCap = "round";
+      const lines = holeLines && holeLines.length
+        ? holeLines
+        : null;
 
-      for (const startInfo of holeStarts) {
-        const start = startInfo.point;
-        const hit = verticalBoundaryHit(points, start, startInfo.skipEdgeA, startInfo.skipEdgeB);
-        if (!hit || hit.y - start.y < holeMinLineDepth) {
-          continue;
+      if (lines) {
+        for (const line of lines) {
+          ctx.lineWidth = Math.max(1.1, scale * 0.03);
+          ctx.strokeStyle = colorString(scaleColor(color, 0.24), 0.44);
+          ctx.beginPath();
+          ctx.moveTo(line.from.x, line.from.y);
+          ctx.lineTo(line.to.x, line.to.y);
+          ctx.stroke();
+
+          ctx.lineWidth = Math.max(0.65, scale * 0.011);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.13)";
+          ctx.beginPath();
+          ctx.moveTo(line.from.x + 0.7, line.from.y + 0.6);
+          ctx.lineTo(line.to.x + 0.7, line.to.y - 0.6);
+          ctx.stroke();
         }
+      } else {
+        for (const startInfo of holeStarts) {
+          const start = startInfo.point;
+          const hit = verticalBoundaryHit(points, start, startInfo.skipEdgeA, startInfo.skipEdgeB);
+          if (!hit || hit.y - start.y < holeMinLineDepth) {
+            continue;
+          }
 
-        ctx.lineWidth = Math.max(1.1, scale * 0.03);
-        ctx.strokeStyle = colorString(scaleColor(color, 0.24), 0.44);
-        ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(hit.x, hit.y);
-        ctx.stroke();
+          ctx.lineWidth = Math.max(1.1, scale * 0.03);
+          ctx.strokeStyle = colorString(scaleColor(color, 0.24), 0.44);
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(hit.x, hit.y);
+          ctx.stroke();
 
-        ctx.lineWidth = Math.max(0.65, scale * 0.011);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.13)";
-        ctx.beginPath();
-        ctx.moveTo(start.x + 0.7, start.y + 0.6);
-        ctx.lineTo(hit.x + 0.7, hit.y - 0.6);
-        ctx.stroke();
+          ctx.lineWidth = Math.max(0.65, scale * 0.011);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.13)";
+          ctx.beginPath();
+          ctx.moveTo(start.x + 0.7, start.y + 0.6);
+          ctx.lineTo(hit.x + 0.7, hit.y - 0.6);
+          ctx.stroke();
+        }
       }
 
       ctx.restore();
     }
 
     function drawTile(item) {
-      const { tile, points, holeStarts } = item;
+      const { tile, points, holeStarts, shadeBands, holeLines } = item;
       const fill = tile.fill || hexToColor(currentTheme.palette[0]);
 
       ctx.save();
@@ -1522,8 +1843,8 @@
       ctx.fill();
 
       if (dropEnabled) {
-        drawHoleShade(points, fill);
-        drawHoleLines(points, holeStarts, fill);
+        drawHoleShade(points, fill, shadeBands);
+        drawHoleLines(points, holeStarts, fill, holeLines);
       }
 
       beginPolygon(points);
@@ -1533,36 +1854,48 @@
       ctx.restore();
     }
 
-    function draw(time = performance.now()) {
-      renderQueued = false;
-      const delta = lastFrameTime ? Math.min(42, time - lastFrameTime) : 16;
-      lastFrameTime = time;
+    async function draw(time = performance.now()) {
+      drawInProgress = true;
+      try {
+        const delta = lastFrameTime ? Math.min(42, time - lastFrameTime) : 16;
+        lastFrameTime = time;
 
-      if (spinEnabled) {
-        spinAngle += delta * 0.00145;
-      }
+        if (spinEnabled) {
+          spinAngle += delta * 0.00145;
+        }
 
-      ctx.clearRect(0, 0, width, height);
-      drawBackground(time);
+        ctx.clearRect(0, 0, width, height);
+        drawBackground(time);
 
-      const tiles = prepareVisibleTiles(time);
-      for (const item of tiles) {
-        drawTile(item);
-      }
+        const tiles = await prepareVisibleTiles(time);
+        for (const item of tiles) {
+          drawTile(item);
+        }
 
-      drawAtmosphere(time);
+        drawAtmosphere(time);
+      } finally {
+        drawInProgress = false;
 
-      if (spinEnabled || currentTheme.animated) {
-        queueRender();
+        if (needsRender || spinEnabled || currentTheme.animated) {
+          needsRender = false;
+          queueRender();
+        }
       }
     }
 
     function queueRender() {
+      if (drawInProgress) {
+        needsRender = true;
+        return;
+      }
       if (renderQueued) {
         return;
       }
       renderQueued = true;
-      requestAnimationFrame(draw);
+      requestAnimationFrame((time) => {
+        renderQueued = false;
+        void draw(time);
+      });
     }
 
     canvas.addEventListener("pointerdown", (event) => {
